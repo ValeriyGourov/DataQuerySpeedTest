@@ -1,0 +1,10 @@
+﻿# Top level entry required to mark this as a global AnalyzerConfig file
+is_global = true
+
+# NOTE: No section headers for configuration entries
+
+#### .NET Coding Conventions ####
+
+
+#### Diagnostic configuration ####
+dotnet_diagnostic.CS1591.severity = none
