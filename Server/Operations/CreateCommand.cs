@@ -12,15 +12,9 @@ public readonly record struct CreateCommand(
 #pragma warning disable CA1812
 internal sealed class CreateCommandHandler : ICommandHandler<CreateCommand>
 {
-	public async ValueTask<Unit> Handle(
+	public ValueTask<Unit> Handle(
 		CreateCommand command,
 		CancellationToken cancellationToken)
-	{
-		await Task
-			.Delay(200, cancellationToken)
-			.ConfigureAwait(false);
-
-		return Unit.Value;
-	}
+		=> ValueTask.FromResult(Unit.Value);
 }
 #pragma warning restore CA1812

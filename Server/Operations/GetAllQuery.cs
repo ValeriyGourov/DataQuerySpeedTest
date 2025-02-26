@@ -15,15 +15,12 @@ internal sealed class GetAllQueryHandler : IQueryHandler<GetAllQuery, IEnumerabl
 {
 	private static readonly Fixture _fixture = new();
 
-	public async ValueTask<IEnumerable<Order>> Handle(
+	public ValueTask<IEnumerable<Order>> Handle(
 		GetAllQuery query,
 		CancellationToken cancellationToken)
 	{
-		await Task
-			.Delay(150, cancellationToken)
-			.ConfigureAwait(false);
-
-		return _fixture.CreateMany<Order>(query.PageSize);
+		IEnumerable<Order> orders = _fixture.CreateMany<Order>(query.PageSize);
+		return ValueTask.FromResult(orders);
 	}
 }
 #pragma warning restore CA1812

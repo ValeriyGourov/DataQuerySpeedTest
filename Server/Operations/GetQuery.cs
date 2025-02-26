@@ -15,18 +15,15 @@ internal sealed class GetQueryHandler : IQueryHandler<GetQuery, Order>
 {
 	private static readonly Fixture _fixture = new();
 
-	public async ValueTask<Order> Handle(
+	public ValueTask<Order> Handle(
 		GetQuery query,
 		CancellationToken cancellationToken)
 	{
-		await Task
-			.Delay(100, cancellationToken)
-			.ConfigureAwait(false);
-
-		return _fixture
+		Order order = _fixture
 			.Build<Order>()
 			.With(order => order.Id, query.Id)
 			.Create();
+		return ValueTask.FromResult(order);
 	}
 }
 #pragma warning restore CA1812
