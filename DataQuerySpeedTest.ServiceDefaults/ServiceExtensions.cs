@@ -25,6 +25,8 @@ public static class ServiceExtensions
 
 		_ = builder.Services.ConfigureHttpClientDefaults(http =>
 		{
+			_ = http.UseSocketsHttpHandler();
+
 			// Turn on resilience by default
 			_ = http.AddStandardResilienceHandler();
 
@@ -43,16 +45,19 @@ public static class ServiceExtensions
 			logging.IncludeScopes = true;
 		});
 
-		_ = builder.Services.AddOpenTelemetry()
+		_ = builder.Services
+			.AddOpenTelemetry()
 			.WithMetrics(metrics =>
 			{
-				_ = metrics.AddAspNetCoreInstrumentation()
+				_ = metrics
+					.AddAspNetCoreInstrumentation()
 					.AddHttpClientInstrumentation()
 					.AddRuntimeInstrumentation();
 			})
 			.WithTracing(tracing =>
 			{
-				_ = tracing.AddSource(builder.Environment.ApplicationName)
+				_ = tracing
+					.AddSource(builder.Environment.ApplicationName)
 					.AddAspNetCoreInstrumentation()
 					.AddGrpcClientInstrumentation()
 					.AddHttpClientInstrumentation();
@@ -79,7 +84,10 @@ public static class ServiceExtensions
 	{
 		_ = builder.Services.AddHealthChecks()
 			// Add a default liveness check to ensure app is responsive
-			.AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+			.AddCheck(
+				"self",
+				() => HealthCheckResult.Healthy(),
+				["live"]);
 
 		return builder;
 	}
@@ -96,10 +104,12 @@ public static class ServiceExtensions
 			_ = app.MapHealthChecks("/health");
 
 			// Only health checks tagged with the "live" tag must pass for app to be considered alive
-			_ = app.MapHealthChecks("/alive", new HealthCheckOptions
-			{
-				Predicate = r => r.Tags.Contains("live")
-			});
+			_ = app.MapHealthChecks(
+				"/alive",
+				new HealthCheckOptions
+				{
+					Predicate = r => r.Tags.Contains("live")
+				});
 		}
 
 		return app;
