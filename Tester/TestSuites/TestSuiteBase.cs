@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 
 using Microsoft.Extensions.Configuration;
 
@@ -16,35 +16,43 @@ internal abstract class TestSuiteBase(IConfiguration configuration)
 	private readonly string _timescaleDbConnectionString = configuration.GetConnectionString("TimescaleDB")
 		?? throw new ArgumentException("Не указана строка подключения к базе данных результатов.");
 
-	protected abstract ScenarioProps Get { get; }
-	protected abstract ScenarioProps GetAll { get; }
-	protected abstract ScenarioProps Create { get; }
+	protected ushort DefaultPageSize { get; } = 20;
 
 	public abstract string Name { get; }
 
+	protected abstract void RunGetScenario();
+	protected abstract void RunGetAllScenario();
+	protected abstract void RunCreateScenario();
+
 	public void Run()
 	{
-		RunScenario(Get);
-		RunScenario(GetAll);
-		RunScenario(Create);
-
-		void RunScenario(ScenarioProps scenario)
-		{
-			using TimescaleDbSink timescaleDbSink = new(new(_timescaleDbConnectionString));
-
-			// TODO: Уровень журналирования установить в Error как для NBomber, так и для приложения в целом.
-
-			NBomberRunner
-				.RegisterScenarios(scenario)
-				.WithReportingSinks(timescaleDbSink)
-				.WithTestSuite(Name)
-				.WithTestName(scenario.ScenarioName)
-				.WithMinimumLogLevel(Debugger.IsAttached
-					? LogEventLevel.Debug
-					: LogEventLevel.Information)
-				.Run();
-		}
+		RunGetScenario();
+		RunGetAllScenario();
+		RunCreateScenario();
 	}
 
-	protected static string GetScenarioName([CallerMemberName] string name = "") => name;
+	protected void RunNBomberRunner(ScenarioProps scenario)
+	{
+		using TimescaleDbSink timescaleDbSink = new(new(_timescaleDbConnectionString));
+
+		// TODO: Уровень журналирования установить в Error как для NBomber, так и для приложения в целом.
+
+		NBomberRunner
+			.RegisterScenarios(scenario)
+			.WithReportingSinks(timescaleDbSink)
+			.WithTestSuite(Name)
+			.WithTestName(scenario.ScenarioName)
+			.WithMinimumLogLevel(Debugger.IsAttached
+				? LogEventLevel.Debug
+				: LogEventLevel.Information)
+			.Run();
+	}
+
+	protected static int GetDataId() => RandomNumberGenerator.GetInt32(int.MaxValue);
+
+	protected static object CreateOrder() => new
+	{
+		ProductName = "Товар 123",
+		Quantity = 12.34m
+	};
 }

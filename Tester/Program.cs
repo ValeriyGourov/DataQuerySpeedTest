@@ -15,6 +15,8 @@ builder.Services
 	.AddSingleton<TestSuiteBase, HttpTestSuite>()
 	.AddHttpClient<HttpTestSuite>();
 
+builder.Services.AddSingleton<TestSuiteBase, WebSocketSuite>();
+
 IHost app = builder.Build();
 
 foreach (TestSuiteBase testSuite in app.Services.GetServices<TestSuiteBase>())

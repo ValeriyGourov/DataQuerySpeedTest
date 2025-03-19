@@ -12,6 +12,10 @@ app.MapDefaultEndpoints();
 
 app.UseHttpsRedirection();
 
-app.MapRestEndpoints();
+app.UseWebSockets();
+
+app
+	.MapRestEndpoints()
+	.MapWebSocketEndpoints();
 
 await app.RunAsync().ConfigureAwait(false);

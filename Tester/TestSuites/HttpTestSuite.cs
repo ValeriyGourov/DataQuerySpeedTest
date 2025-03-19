@@ -21,51 +21,58 @@ internal sealed class HttpTestSuite(
 
 	public override string Name { get; } = "HTTP";
 
-	protected override ScenarioProps Get => Scenario.Create(
-		GetScenarioName(),
-		async _ =>
-		{
-			HttpRequestMessage request = new(
-				HttpMethod.Get,
-				new Uri($"{_resourceName}/1", UriKind.Relative));
-			request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
-
-			return await Http
-				.Send(_httpClient, request)
-				.ConfigureAwait(false);
-		});
-
-	protected override ScenarioProps GetAll => Scenario.Create(
-		GetScenarioName(),
-		async _ =>
-		{
-			HttpRequestMessage request = new(
-				HttpMethod.Get,
-				new Uri(_resourceName, UriKind.Relative));
-			request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
-
-			return await Http
-				.Send(_httpClient, request)
-				.ConfigureAwait(false);
-		});
-
-	protected override ScenarioProps Create => Scenario.Create(
-		GetScenarioName(),
-		async _ =>
-		{
-			HttpRequestMessage request = new(
-				HttpMethod.Post,
-				new Uri(_resourceName, UriKind.Relative))
+	private void RunScenario(
+		string scenarioName,
+		Func<HttpRequestMessage> requestFactory)
+	{
+		ScenarioProps scenario = Scenario.Create(
+			scenarioName,
+			async _ =>
 			{
-				Content = JsonContent.Create(new
-				{
-					ProductName = "Товар 123",
-					Quantity = 12.3m
-				})
-			};
+				using HttpRequestMessage request = requestFactory();
 
-			return await Http
-				.Send(_httpClient, request)
-				.ConfigureAwait(false);
+				return await Http
+					.Send(_httpClient, request)
+					.ConfigureAwait(false);
+			});
+
+		RunNBomberRunner(scenario);
+	}
+
+	protected override void RunGetScenario() => RunScenario(
+		ScenarioNames.Get,
+		() =>
+		{
+			HttpRequestMessage request = new(
+				HttpMethod.Get,
+				new Uri(
+					$"{_resourceName}/{GetDataId()}",
+					UriKind.Relative));
+			request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+
+			return request;
+		});
+
+	protected override void RunGetAllScenario() => RunScenario(
+		ScenarioNames.GetAll,
+		() =>
+		{
+			HttpRequestMessage request = new(
+				HttpMethod.Get,
+				new Uri(
+					$"{_resourceName}?PageSize={DefaultPageSize}",
+					UriKind.Relative));
+			request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+
+			return request;
+		});
+
+	protected override void RunCreateScenario() => RunScenario(
+		ScenarioNames.Create,
+		() => new HttpRequestMessage(
+			HttpMethod.Post,
+			new Uri(_resourceName, UriKind.Relative))
+		{
+			Content = JsonContent.Create(CreateOrder())
 		});
 }
