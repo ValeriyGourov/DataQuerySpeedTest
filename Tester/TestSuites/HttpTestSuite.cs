@@ -10,6 +10,7 @@ using NBomber.Http.CSharp;
 
 namespace Tester.TestSuites;
 
+#pragma warning disable CA1812
 internal sealed class HttpTestSuite(
 	IConfiguration configuration,
 	HttpClient httpClient)
