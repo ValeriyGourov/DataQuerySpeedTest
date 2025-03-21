@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Security.Cryptography;
 
+using DataQuerySpeedTest.ServiceDefaults.Models;
+
 using Microsoft.Extensions.Configuration;
 
 using NBomber.Contracts;
@@ -50,9 +52,7 @@ internal abstract class TestSuiteBase(IConfiguration configuration)
 
 	protected static int GetDataId() => RandomNumberGenerator.GetInt32(int.MaxValue);
 
-	protected static object CreateOrder() => new
-	{
-		ProductName = "Товар 123",
-		Quantity = 12.34m
-	};
+	protected static CreateCommand CreateOrder() => new(
+		"Товар 1234",
+		12.34m);
 }

@@ -15,7 +15,8 @@ builder.Services
 	.AddSingleton<TestSuiteBase, HttpTestSuite>()
 	.AddHttpClient<HttpTestSuite>();
 
-builder.Services.AddSingleton<TestSuiteBase, WebSocketSuite>();
+builder.Services.AddSingleton<TestSuiteBase, JsonWebSocketSuite>();
+builder.Services.AddSingleton<TestSuiteBase, MessagePackWebSocketSuite>();
 
 IHost app = builder.Build();
 

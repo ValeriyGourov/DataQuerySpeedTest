@@ -1,7 +1,11 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Globalization;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.Mime;
 
+using DataQuerySpeedTest.ServiceDefaults.Models;
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
 using NBomber.Contracts;
@@ -58,10 +62,14 @@ internal sealed class HttpTestSuite(
 		ScenarioNames.GetAll,
 		() =>
 		{
+			QueryString queryString = QueryString.Create(
+				nameof(GetAllQuery.PageSize),
+				DefaultPageSize.ToString(CultureInfo.InvariantCulture));
+
 			HttpRequestMessage request = new(
 				HttpMethod.Get,
 				new Uri(
-					$"{_resourceName}?PageSize={DefaultPageSize}",
+					_resourceName + queryString,
 					UriKind.Relative));
 			request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
 
