@@ -1,5 +1,4 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using DataQuerySpeedTest.ServiceDefaults.Models;
 
 using Microsoft.Extensions.Configuration;
 
@@ -12,13 +11,13 @@ using WebSocket = NBomber.WebSockets.WebSocket;
 
 namespace Tester.TestSuites;
 
-#pragma warning disable CA1812
-internal sealed class WebSocketSuite : TestSuiteBase
+internal abstract class WebSocketSuiteBase : TestSuiteBase
 {
 	private const string _resourceName = "WebSocket";
 	private readonly Uri _host;
+	private readonly string _subProtocol;
 
-	public WebSocketSuite(IConfiguration configuration)
+	protected WebSocketSuiteBase(IConfiguration configuration, string subProtocol)
 		: base(configuration)
 	{
 		Uri httpsServerEndpont = configuration.GetValue<Uri>("HttpsServerEndpont")
@@ -28,9 +27,9 @@ internal sealed class WebSocketSuite : TestSuiteBase
 		{
 			Scheme = "wss"
 		}.Uri;
-	}
 
-	public override string Name { get; } = "WebSocket";
+		_subProtocol = subProtocol;
+	}
 
 	private void RunScenario<T>(string scenarioName, T request, bool receiveResponse)
 	{
@@ -45,10 +44,10 @@ internal sealed class WebSocketSuite : TestSuiteBase
 				{
 					WebSocket webSocket = clientPool.GetClient(context.ScenarioInfo);
 
-					string requestJson = JsonSerializer.Serialize(request);
+					byte[] payload = Serialize(request);
 
 					await webSocket
-						.Send(requestJson)
+						.Send(payload)
 						.ConfigureAwait(false);
 
 					if (receiveResponse)
@@ -56,10 +55,8 @@ internal sealed class WebSocketSuite : TestSuiteBase
 						WebSocketResponse response = await webSocket
 							.Receive()
 							.ConfigureAwait(false);
-						string responceJson = Encoding.UTF8.GetString(response.Data.Span);
 
 						return Response.Ok(
-							payload: responceJson,
 							sizeBytes: response.Data.Length);
 					}
 					else
@@ -70,6 +67,7 @@ internal sealed class WebSocketSuite : TestSuiteBase
 			.WithInit(async _ =>
 			{
 				WebSocket webSocket = new(new());
+				webSocket.Client.Options.AddSubProtocol(_subProtocol);
 
 				await webSocket
 					.Connect(address)
@@ -86,14 +84,16 @@ internal sealed class WebSocketSuite : TestSuiteBase
 		RunNBomberRunner(scenario);
 	}
 
+	protected abstract byte[] Serialize<T>(T request);
+
 	protected override void RunGetScenario() => RunScenario(
 		ScenarioNames.Get,
-		new { Id = GetDataId() },
+		new GetQuery(GetDataId()),
 		true);
 
 	protected override void RunGetAllScenario() => RunScenario(
 		ScenarioNames.GetAll,
-		new { PageSize = DefaultPageSize },
+		new GetAllQuery(DefaultPageSize),
 		true);
 
 	protected override void RunCreateScenario() => RunScenario(

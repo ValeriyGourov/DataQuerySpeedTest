@@ -1,8 +1,6 @@
 ﻿using System.Net.WebSockets;
-using System.Text;
-using System.Text.Json;
 
-namespace Server.QueryBuilders;
+namespace Server.QueryBuilders.WebSocketQueries;
 
 internal static class WebSocketExtensions
 {
@@ -31,19 +29,5 @@ internal static class WebSocketExtensions
 		} while (!result.EndOfMessage);
 
 		return memoryStream.ToArray();
-	}
-
-	public static Task SendAsJsonAsync<T>(
-		this WebSocket webSocket,
-		T data,
-		CancellationToken cancellationToken = default)
-	{
-		string json = JsonSerializer.Serialize(data);
-
-		return webSocket.SendAsync(
-			Encoding.UTF8.GetBytes(json),
-			WebSocketMessageType.Text,
-			true,
-			cancellationToken);
 	}
 }

@@ -1,11 +1,10 @@
 ﻿#pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
 
+using DataQuerySpeedTest.ServiceDefaults.Models;
+
 using Mediator;
 
 using Microsoft.AspNetCore.Http.HttpResults;
-
-using Server.Data;
-using Server.Operations;
 
 namespace Server.QueryBuilders;
 

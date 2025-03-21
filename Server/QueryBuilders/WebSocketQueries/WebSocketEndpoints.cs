@@ -2,18 +2,22 @@
 
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
+using System.Runtime.Serialization;
+
+using DataQuerySpeedTest.ServiceDefaults.Models;
 
 using Mediator;
 
-using Server.Data;
-using Server.Operations;
-
-namespace Server.QueryBuilders;
+namespace Server.QueryBuilders.WebSocketQueries;
 
 internal static class WebSocketEndpoints
 {
+	private static readonly IWebSocketSubProtocol[] _supportedSubProtocols =
+	[
+		new JsonWebSocketSubprotocol(),
+		new MessagePackWebSocketSubProtocol()
+	];
+
 	public static IEndpointRouteBuilder MapWebSocketEndpoints(this IEndpointRouteBuilder routes)
 	{
 		RouteGroupBuilder group = routes.MapGroup("WebSocket");
@@ -83,8 +87,10 @@ internal static class WebSocketEndpoints
 			return;
 		}
 
+		IWebSocketSubProtocol subProtocol = NegotiateSubProtocol(context.WebSockets.WebSocketRequestedProtocols);
+
 		using WebSocket webSocket = await context.WebSockets
-			.AcceptWebSocketAsync()
+			.AcceptWebSocketAsync(subProtocol.SubProtocol)
 			.ConfigureAwait(false);
 
 		while (!cancellationToken.IsCancellationRequested)
@@ -92,7 +98,7 @@ internal static class WebSocketEndpoints
 			switch (webSocket.State)
 			{
 				case WebSocketState.Open:
-					await HandleData<TMessage, TResponce>(webSocket, responceHandler, cancellationToken)
+					await HandleData<TMessage, TResponce>(webSocket, subProtocol, responceHandler, cancellationToken)
 						.ConfigureAwait(false);
 					break;
 
@@ -113,6 +119,7 @@ internal static class WebSocketEndpoints
 
 	private static async Task HandleData<TMessage, TResponce>(
 		WebSocket webSocket,
+		IWebSocketSubProtocol subProtocol,
 		Func<IMessage, CancellationToken, ValueTask<TResponce>> responceHandler,
 		CancellationToken cancellationToken)
 		where TMessage : IMessage
@@ -126,30 +133,16 @@ internal static class WebSocketEndpoints
 			return;
 		}
 
-		string json = Encoding.UTF8.GetString(buffer);
-
-		TMessage? message;
+		TMessage message;
 		try
 		{
-			message = JsonSerializer.Deserialize<TMessage>(json);
+			message = subProtocol.Deserialize<TMessage>(buffer);
 		}
-		catch (JsonException)
+		catch (SerializationException exception)
 		{
 			await HandleInvalidPayloadDataAsync(
 				webSocket,
-				"Не удалось прочитать полученные данные как JSON.",
-				cancellationToken)
-				.ConfigureAwait(false);
-
-			return;
-		}
-
-		if (message is null
-			|| EqualityComparer<TMessage>.Default.Equals(message, default))
-		{
-			await HandleInvalidPayloadDataAsync(
-				webSocket,
-				"В сообщении не обнаружены полезные данные.",
+				exception.Message,
 				cancellationToken)
 				.ConfigureAwait(false);
 
@@ -161,8 +154,8 @@ internal static class WebSocketEndpoints
 
 		if (result is not Unit)
 		{
-			await webSocket
-				.SendAsJsonAsync(result, cancellationToken)
+			await subProtocol
+				.SendAsync(result, webSocket, cancellationToken)
 				.ConfigureAwait(false);
 		}
 	}
@@ -175,4 +168,8 @@ internal static class WebSocketEndpoints
 			WebSocketCloseStatus.InvalidPayloadData,
 			description,
 			cancellationToken);
+
+	private static IWebSocketSubProtocol NegotiateSubProtocol(IEnumerable<string> requestedSubProtocols)
+		=> _supportedSubProtocols.First(subProtocol
+			=> requestedSubProtocols.Contains(subProtocol.SubProtocol));
 }
