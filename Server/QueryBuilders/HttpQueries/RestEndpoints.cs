@@ -6,7 +6,7 @@ using Mediator;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 
-namespace Server.QueryBuilders;
+namespace Server.QueryBuilders.HttpQueries;
 
 internal static class RestEndpoints
 {
