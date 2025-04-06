@@ -5,6 +5,8 @@ using MessagePack;
 namespace DataQuerySpeedTest.ServiceDefaults.Models;
 
 [MessagePackObject]
-public readonly record struct GetQuery(
-	[property: Key(0)] int Id)
-	: IQuery<Order>;
+public sealed class GetQuery : IQuery<Order>
+{
+	[property: Key(0)]
+	public required int Id { get; init; }
+}

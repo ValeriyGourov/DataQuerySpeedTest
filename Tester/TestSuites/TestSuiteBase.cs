@@ -18,7 +18,7 @@ internal abstract class TestSuiteBase(IConfiguration configuration)
 	private readonly string _timescaleDbConnectionString = configuration.GetConnectionString("TimescaleDB")
 		?? throw new ArgumentException("Не указана строка подключения к базе данных результатов.");
 
-	protected ushort DefaultPageSize { get; } = 20;
+	protected static ushort DefaultPageSize { get; } = 20;
 
 	public abstract string Name { get; }
 
@@ -52,7 +52,19 @@ internal abstract class TestSuiteBase(IConfiguration configuration)
 
 	protected static int GetDataId() => RandomNumberGenerator.GetInt32(int.MaxValue);
 
-	protected static CreateCommand CreateOrder() => new(
-		"Товар 1234",
-		12.34m);
+	protected static GetQuery NewGetQuery() => new()
+	{
+		Id = GetDataId()
+	};
+
+	protected static GetAllQuery NewGetAllQuery() => new()
+	{
+		PageSize = DefaultPageSize
+	};
+
+	protected static CreateCommand NewCreateCommand() => new()
+	{
+		ProductName = "Товар 1234",
+		Quantity = 12.34m
+	};
 }

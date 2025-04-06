@@ -82,6 +82,6 @@ internal sealed class HttpTestSuite(
 			HttpMethod.Post,
 			new Uri(_resourceName, UriKind.Relative))
 		{
-			Content = JsonContent.Create(CreateOrder())
+			Content = JsonContent.Create(NewCreateCommand())
 		});
 }
