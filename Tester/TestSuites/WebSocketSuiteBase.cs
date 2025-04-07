@@ -1,6 +1,4 @@
-﻿using DataQuerySpeedTest.ServiceDefaults.Models;
-
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
 using NBomber;
 using NBomber.Contracts;
@@ -88,16 +86,16 @@ internal abstract class WebSocketSuiteBase : TestSuiteBase
 
 	protected override void RunGetScenario() => RunScenario(
 		ScenarioNames.Get,
-		new GetQuery(GetDataId()),
+		NewGetQuery(),
 		true);
 
 	protected override void RunGetAllScenario() => RunScenario(
 		ScenarioNames.GetAll,
-		new GetAllQuery(DefaultPageSize),
+		NewGetAllQuery(),
 		true);
 
 	protected override void RunCreateScenario() => RunScenario(
 		ScenarioNames.Create,
-		CreateOrder(),
+		NewCreateCommand(),
 		false);
 }
