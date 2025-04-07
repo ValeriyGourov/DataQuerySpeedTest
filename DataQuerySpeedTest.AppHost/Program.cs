@@ -28,6 +28,7 @@ builder
 	.WaitFor(nBomberStudio)
 	.WithReference(server)
 	.WithReference(timescaleDB)
-	.WithEnvironment("HttpsServerEndpont", server.GetEndpoint("https"));
+	.WithEnvironment("HttpsServerEndpont", server.GetEndpoint("https"))
+	.WithExplicitStart();
 
 await builder.Build().RunAsync().ConfigureAwait(false);
