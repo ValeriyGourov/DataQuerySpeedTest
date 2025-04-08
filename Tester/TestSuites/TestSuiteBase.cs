@@ -1,9 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Security.Cryptography;
-
-using DataQuerySpeedTest.ServiceDefaults.Models;
-
-using Microsoft.Extensions.Configuration;
 
 using NBomber.Contracts;
 using NBomber.CSharp;
@@ -18,22 +13,59 @@ internal abstract class TestSuiteBase(IConfiguration configuration)
 	private readonly string _timescaleDbConnectionString = configuration.GetConnectionString("TimescaleDB")
 		?? throw new ArgumentException("Не указана строка подключения к базе данных результатов.");
 
-	protected static ushort DefaultPageSize { get; } = 20;
-
 	public abstract string Name { get; }
 
-	protected abstract void RunGetScenario();
-	protected abstract void RunGetAllScenario();
-	protected abstract void RunCreateScenario();
+	protected Task RunGetScenarioAsync() => RunScenarioAsync(
+		ScenarioNames.Get,
+		static (module, cancellationToken) => module.ExecuteGetAsync(cancellationToken));
+	protected Task RunGetAllScenarioAsync() => RunScenarioAsync(
+		ScenarioNames.GetAll,
+		static (module, cancellationToken) => module.ExecuteGetAllAsync(cancellationToken));
+	protected Task RunCreateScenarioAsync() => RunScenarioAsync(
+		ScenarioNames.Create,
+		static (module, cancellationToken) => module.ExecuteCreateAsync(cancellationToken));
 
-	public void Run()
+	public async Task RunAsync(CancellationToken _ = default)
 	{
-		RunGetScenario();
-		RunGetAllScenario();
-		RunCreateScenario();
+		await RunGetScenarioAsync().ConfigureAwait(false);
+		await RunGetAllScenarioAsync().ConfigureAwait(false);
+		await RunCreateScenarioAsync().ConfigureAwait(false);
 	}
 
-	protected void RunNBomberRunner(ScenarioProps scenario)
+	protected abstract ValueTask<IModule> CreateModuleAsync(
+		string scenarioName,
+		CancellationToken cancellationToken);
+
+	private async Task RunScenarioAsync(
+		string scenarioName,
+		Func<IModule, CancellationToken, ValueTask<long?>> handler,
+		CancellationToken cancellationToken = default)
+	{
+		IModule module = await CreateModuleAsync(scenarioName, cancellationToken)
+			.ConfigureAwait(false);
+
+		ScenarioProps scenario = Scenario.Create(
+			scenarioName,
+			async _ =>
+			{
+				long? size = await handler(module, CancellationToken.None).ConfigureAwait(false);
+				return Response.Ok(sizeBytes: size ?? default);
+			});
+
+		RunNBomberRunner(scenario);
+
+		switch (module)
+		{
+			case IAsyncDisposable disposableModule:
+				await disposableModule.DisposeAsync().ConfigureAwait(false);
+				break;
+			case IDisposable disposableModule:
+				disposableModule.Dispose();
+				break;
+		}
+	}
+
+	private void RunNBomberRunner(ScenarioProps scenario)
 	{
 		using TimescaleDbSink timescaleDbSink = new(new(_timescaleDbConnectionString));
 
@@ -49,22 +81,4 @@ internal abstract class TestSuiteBase(IConfiguration configuration)
 				: LogEventLevel.Information)
 			.Run();
 	}
-
-	protected static int GetDataId() => RandomNumberGenerator.GetInt32(int.MaxValue);
-
-	protected static GetQuery NewGetQuery() => new()
-	{
-		Id = GetDataId()
-	};
-
-	protected static GetAllQuery NewGetAllQuery() => new()
-	{
-		PageSize = DefaultPageSize
-	};
-
-	protected static CreateCommand NewCreateCommand() => new()
-	{
-		ProductName = "Товар 1234",
-		Quantity = 12.34m
-	};
 }

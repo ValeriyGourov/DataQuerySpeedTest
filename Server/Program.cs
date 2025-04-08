@@ -1,5 +1,4 @@
-﻿using Server.QueryBuilders.HttpQueries;
-using Server.QueryBuilders.WebSocketQueries;
+﻿using Server.QueryBuilders;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

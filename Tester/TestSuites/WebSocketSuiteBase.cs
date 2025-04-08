@@ -1,21 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿namespace Tester.TestSuites;
 
-using NBomber;
-using NBomber.Contracts;
-using NBomber.CSharp;
-using NBomber.WebSockets;
-
-using WebSocket = NBomber.WebSockets.WebSocket;
-
-namespace Tester.TestSuites;
-
-internal abstract class WebSocketSuiteBase : TestSuiteBase
+internal abstract class WebSocketSuiteBase<TModule> : TestSuiteBase
+	where TModule : IWebSocketModule
 {
-	private const string _resourceName = "WebSocket";
 	private readonly Uri _host;
-	private readonly string _subProtocol;
 
-	protected WebSocketSuiteBase(IConfiguration configuration, string subProtocol)
+	protected WebSocketSuiteBase(IConfiguration configuration)
 		: base(configuration)
 	{
 		Uri httpsServerEndpont = configuration.GetValue<Uri>("HttpsServerEndpont")
@@ -25,77 +15,12 @@ internal abstract class WebSocketSuiteBase : TestSuiteBase
 		{
 			Scheme = "wss"
 		}.Uri;
-
-		_subProtocol = subProtocol;
 	}
 
-	private void RunScenario<T>(string scenarioName, T request, bool receiveResponse)
-	{
-		Uri address = new(_host, $"{_resourceName}/{scenarioName}");
-
-		using ClientPool<WebSocket> clientPool = new();
-
-		ScenarioProps scenario = Scenario
-			.Create(
-				scenarioName,
-				async context =>
-				{
-					WebSocket webSocket = clientPool.GetClient(context.ScenarioInfo);
-
-					byte[] payload = Serialize(request);
-
-					await webSocket
-						.Send(payload)
-						.ConfigureAwait(false);
-
-					if (receiveResponse)
-					{
-						WebSocketResponse response = await webSocket
-							.Receive()
-							.ConfigureAwait(false);
-
-						return Response.Ok(
-							sizeBytes: response.Data.Length);
-					}
-					else
-					{
-						return Response.Ok();
-					}
-				})
-			.WithInit(async _ =>
-			{
-				WebSocket webSocket = new(new());
-				webSocket.Client.Options.AddSubProtocol(_subProtocol);
-
-				await webSocket
-					.Connect(address)
-					.ConfigureAwait(false);
-
-				clientPool.AddClient(webSocket);
-			})
-			.WithClean(_ =>
-			{
-				clientPool.DisposeClients();
-				return Task.CompletedTask;
-			});
-
-		RunNBomberRunner(scenario);
-	}
-
-	protected abstract byte[] Serialize<T>(T request);
-
-	protected override void RunGetScenario() => RunScenario(
-		ScenarioNames.Get,
-		NewGetQuery(),
-		true);
-
-	protected override void RunGetAllScenario() => RunScenario(
-		ScenarioNames.GetAll,
-		NewGetAllQuery(),
-		true);
-
-	protected override void RunCreateScenario() => RunScenario(
-		ScenarioNames.Create,
-		NewCreateCommand(),
-		false);
+	protected override async ValueTask<IModule> CreateModuleAsync(
+		string scenarioName,
+		CancellationToken cancellationToken)
+		=> await TModule
+			.CreateAsync(_host, scenarioName, cancellationToken)
+			.ConfigureAwait(false);
 }

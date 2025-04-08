@@ -12,8 +12,8 @@ builder.Services.ConfigureHttpClientDefaults(static httpClientBuilder
 		=> client.BaseAddress = new("https+http://Server")));
 
 builder.Services
-	.AddSingleton<TestSuiteBase, HttpTestSuite>()
-	.AddHttpClient<HttpTestSuite>();
+	.AddSingleton<TestSuiteBase, RestTestSuite>()
+	.AddHttpClient<RestTestSuite>();
 
 builder.Services.AddSingleton<TestSuiteBase, JsonWebSocketSuite>();
 builder.Services.AddSingleton<TestSuiteBase, MessagePackWebSocketSuite>();
@@ -22,5 +22,5 @@ IHost app = builder.Build();
 
 foreach (TestSuiteBase testSuite in app.Services.GetServices<TestSuiteBase>())
 {
-	testSuite.Run();
+	await testSuite.RunAsync().ConfigureAwait(false);
 }
