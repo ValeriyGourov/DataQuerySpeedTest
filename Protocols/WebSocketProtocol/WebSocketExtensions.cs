@@ -1,14 +1,19 @@
-﻿using System.Net.WebSockets;
+﻿using System.Buffers;
+using System.Net.WebSockets;
 
-namespace Server.QueryBuilders.WebSocketQueries;
+namespace Protocols.WebSocketProtocol;
 
-internal static class WebSocketExtensions
+public static class WebSocketExtensions
 {
-	public static async Task<byte[]> ReceiveToTheEndAsync(
+	private const int _bufferSize = 1024 * 4;
+
+	public static async ValueTask<byte[]> ReceiveAllAsync(
 		this WebSocket webSocket,
 		CancellationToken cancellationToken = default)
 	{
-		byte[] buffer = new byte[1024 * 4];
+		ArgumentNullException.ThrowIfNull(webSocket);
+
+		byte[] buffer = ArrayPool<byte>.Shared.Rent(_bufferSize);
 
 #pragma warning disable CA2007 // Попробуйте вызвать ConfigureAwait для ожидаемой задачи
 		await using MemoryStream memoryStream = new();
@@ -27,6 +32,8 @@ internal static class WebSocketExtensions
 					cancellationToken)
 				.ConfigureAwait(false);
 		} while (!result.EndOfMessage);
+
+		ArrayPool<byte>.Shared.Return(buffer);
 
 		return memoryStream.ToArray();
 	}

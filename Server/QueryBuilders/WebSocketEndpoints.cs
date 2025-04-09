@@ -8,7 +8,9 @@ using DataQuerySpeedTest.ServiceDefaults.Models;
 
 using Mediator;
 
-namespace Server.QueryBuilders.WebSocketQueries;
+using Protocols.WebSocketProtocol;
+
+namespace Server.QueryBuilders;
 
 internal static class WebSocketEndpoints
 {
@@ -124,19 +126,12 @@ internal static class WebSocketEndpoints
 		CancellationToken cancellationToken)
 		where TMessage : IMessage
 	{
-		byte[] buffer = await webSocket
-			.ReceiveToTheEndAsync(cancellationToken)
-			.ConfigureAwait(false);
-
-		if (webSocket.State != WebSocketState.Open)
-		{
-			return;
-		}
-
-		TMessage message;
+		WebSocketResponse<TMessage> response;
 		try
 		{
-			message = subProtocol.Deserialize<TMessage>(buffer);
+			response = await subProtocol
+				.ReceiveAsync<TMessage>(webSocket, cancellationToken)
+				.ConfigureAwait(false);
 		}
 		catch (SerializationException exception)
 		{
@@ -149,7 +144,12 @@ internal static class WebSocketEndpoints
 			return;
 		}
 
-		TResponce result = await responceHandler(message, cancellationToken)
+		if (webSocket.State != WebSocketState.Open)
+		{
+			return;
+		}
+
+		TResponce result = await responceHandler(response.Data, cancellationToken)
 			.ConfigureAwait(false);
 
 		if (result is not Unit)

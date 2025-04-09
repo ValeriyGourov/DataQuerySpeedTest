@@ -15,7 +15,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Server\Server.csproj" />
-		<ProjectReference Include="..\Tester\Tester.csproj" />
+		<ProjectReference Include="..\Tester.Benchmark\Tester.Benchmark.csproj" />
+		<ProjectReference Include="..\Tester.Load\Tester.Load.csproj" />
 	</ItemGroup>
 
 </Project>

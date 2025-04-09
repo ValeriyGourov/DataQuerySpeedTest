@@ -14,7 +14,7 @@ timescale.WithEnvironment(
 	"POSTGRES_DB",
 	timescaleDB.Resource.DatabaseName);
 
-IResourceBuilder<ContainerResource> nBomberStudio = builder
+builder
 	.AddContainer("NBomberStudio", "nbomberdocker/nbomber-studio")
 	.WithHttpEndpoint(targetPort: 8080)
 	.WithEnvironment("DBSETTINGS:CONNECTIONSTRING", timescaleDB)
@@ -22,12 +22,21 @@ IResourceBuilder<ContainerResource> nBomberStudio = builder
 
 IResourceBuilder<ProjectResource> server = builder.AddProject<Projects.Server>(nameof(Projects.Server));
 
+EndpointReference httpsServerEndpont = server.GetEndpoint("https");
+
 builder
-	.AddProject<Projects.Tester>(nameof(Projects.Tester))
+	.AddProject<Projects.Tester_Load>("Tester-Load")
 	.WaitFor(server)
-	.WaitFor(nBomberStudio)
 	.WithReference(server)
 	.WithReference(timescaleDB)
-	.WithEnvironment("HttpsServerEndpont", server.GetEndpoint("https"));
+	.WithEnvironment("HttpsServerEndpont", httpsServerEndpont)
+	.WithExplicitStart();
+
+builder
+	.AddProject<Projects.Tester_Benchmark>("Tester-Benchmark")
+	.WaitFor(server)
+	.WithReference(server)
+	.WithEnvironment("HttpsServerEndpont", httpsServerEndpont)
+	.WithExplicitStart();
 
 await builder.Build().RunAsync().ConfigureAwait(false);

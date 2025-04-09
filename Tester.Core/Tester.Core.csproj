@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<ProjectReference Include="..\DataQuerySpeedTest.ServiceDefaults\DataQuerySpeedTest.ServiceDefaults.csproj" />
+		<ProjectReference Include="..\Protocols\Protocols.csproj" />
+	</ItemGroup>
+
+</Project>

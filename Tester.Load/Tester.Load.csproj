@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NBomber" Version="6.*" />
+		<PackageReference Include="NBomber.Sinks.Timescale" Version="0.7.*" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Tester.Core\Tester.Core.csproj" />
+	</ItemGroup>
+
+</Project>
