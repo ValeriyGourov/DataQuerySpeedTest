@@ -5,8 +5,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="NBomber" Version="6.*" />
-		<PackageReference Include="NBomber.Sinks.Timescale" Version="0.7.*" />
+		<PackageReference Include="BenchmarkDotNet" Version="0.14.*" />
 	</ItemGroup>
 
 	<ItemGroup>

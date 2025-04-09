@@ -1,21 +1,12 @@
-﻿namespace Tester.TestSuites;
+﻿using Tester.Core.Extensions;
 
-internal abstract class WebSocketSuiteBase<TModule> : TestSuiteBase
+namespace Tester.TestSuites;
+
+internal abstract class WebSocketSuiteBase<TModule>(IConfiguration configuration)
+	: TestSuiteBase(configuration)
 	where TModule : IWebSocketModule
 {
-	private readonly Uri _host;
-
-	protected WebSocketSuiteBase(IConfiguration configuration)
-		: base(configuration)
-	{
-		Uri httpsServerEndpont = configuration.GetValue<Uri>("HttpsServerEndpont")
-			?? throw new InvalidOperationException("В конфигурации не указан адрес сервера.");
-
-		_host = new UriBuilder(httpsServerEndpont)
-		{
-			Scheme = "wss"
-		}.Uri;
-	}
+	private readonly Uri _host = configuration.GetWebSocketHost();
 
 	protected override async ValueTask<IModule> CreateModuleAsync(
 		string scenarioName,

@@ -8,7 +8,7 @@ internal sealed class RestTestSuite(
 {
 	private readonly HttpClient _httpClient = httpClient;
 
-	public override string Name { get; } = "REST";
+	public override string Name { get; } = RequestTypeNames.Rest;
 
 	protected override ValueTask<IModule> CreateModuleAsync(
 		string scenarioName,

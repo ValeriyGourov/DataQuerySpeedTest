@@ -4,5 +4,5 @@
 internal sealed class JsonWebSocketSuite(IConfiguration configuration)
 	: WebSocketSuiteBase<JsonWebSocketModule>(configuration)
 {
-	public override string Name { get; } = "WebSocket-JSON";
+	public override string Name { get; } = RequestTypeNames.WebSocketJson;
 }

@@ -1,6 +1,6 @@
-﻿namespace Tester.TestSuites;
+﻿namespace DataQuerySpeedTest.ServiceDefaults;
 
-internal static class ScenarioNames
+public static class ScenarioNames
 {
 	public const string Get = nameof(Get);
 	public const string GetAll = nameof(GetAll);

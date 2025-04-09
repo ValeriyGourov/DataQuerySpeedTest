@@ -1,15 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+using Tester.Core.Extensions;
 using Tester.TestSuites;
 
 HostApplicationBuilder builder = new(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.ConfigureHttpClientDefaults(static httpClientBuilder
-	=> httpClientBuilder.ConfigureHttpClient(static client
-		=> client.BaseAddress = new("https+http://Server")));
+builder.Services.ConfigureHttpClient();
 
 builder.Services
 	.AddSingleton<TestSuiteBase, RestTestSuite>()

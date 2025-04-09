@@ -69,8 +69,6 @@ internal abstract class TestSuiteBase(IConfiguration configuration)
 	{
 		using TimescaleDbSink timescaleDbSink = new(new(_timescaleDbConnectionString));
 
-		// TODO: Уровень журналирования установить в Error как для NBomber, так и для приложения в целом.
-
 		NBomberRunner
 			.RegisterScenarios(scenario)
 			.WithReportingSinks(timescaleDbSink)

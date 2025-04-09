@@ -39,15 +39,17 @@ public static class ServiceExtensions
 
 	public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
 	{
-		_ = builder.Logging.AddOpenTelemetry(logging =>
-		{
-			logging.IncludeFormattedMessage = true;
-			logging.IncludeScopes = true;
-		});
+		_ = builder.Logging
+			.AddOpenTelemetry(static logging =>
+			{
+				logging.IncludeFormattedMessage = true;
+				logging.IncludeScopes = true;
+			})
+			.SetMinimumLevel(LogLevel.Error);
 
 		_ = builder.Services
 			.AddOpenTelemetry()
-			.WithMetrics(metrics =>
+			.WithMetrics(static metrics =>
 			{
 				_ = metrics
 					.AddAspNetCoreInstrumentation()

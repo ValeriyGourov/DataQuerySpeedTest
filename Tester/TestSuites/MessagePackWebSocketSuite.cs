@@ -4,5 +4,5 @@
 internal sealed class MessagePackWebSocketSuite(IConfiguration configuration)
 	: WebSocketSuiteBase<MessagePackWebSocketModule>(configuration)
 {
-	public override string Name { get; } = "WebSocket-MessagePack";
+	public override string Name { get; } = RequestTypeNames.WebSocketMessagePack;
 }

@@ -8,5 +8,5 @@ namespace DataQuerySpeedTest.ServiceDefaults.Models;
 public sealed class GetAllQuery : IQuery<IEnumerable<Order>>
 {
 	[property: Key(0)]
-	public ushort PageSize { get; init; } = 20;
+	public required ushort PageSize { get; init; }
 }
