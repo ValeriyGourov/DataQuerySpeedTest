@@ -6,7 +6,7 @@ using NBomber.Sinks.Timescale;
 
 using Serilog.Events;
 
-namespace Tester.TestSuites;
+namespace Tester.Load.TestSuites;
 
 internal abstract class TestSuiteBase(IConfiguration configuration)
 {

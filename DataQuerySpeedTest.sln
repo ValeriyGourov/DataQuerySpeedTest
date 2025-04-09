@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{3461765F-60A1-21BC-764E-FC799869FE2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tester", "Tester\Tester.csproj", "{DB34FEA0-3E9B-4F7D-BDC4-58DE5A948380}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tester.Load", "Tester.Load\Tester.Load.csproj", "{DB34FEA0-3E9B-4F7D-BDC4-58DE5A948380}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tester.Core", "Tester.Core\Tester.Core.csproj", "{055096BE-A218-4CAF-97EB-088D1E3E27D9}"
 EndProject

@@ -1,4 +1,4 @@
-﻿namespace Tester.TestSuites;
+﻿namespace Tester.Load.TestSuites;
 
 #pragma warning disable CA1812
 internal sealed class RestTestSuite(

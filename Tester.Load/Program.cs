@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Hosting;
 
 using Tester.Core.Extensions;
-using Tester.TestSuites;
+using Tester.Load.TestSuites;
 
 HostApplicationBuilder builder = new(args);
 

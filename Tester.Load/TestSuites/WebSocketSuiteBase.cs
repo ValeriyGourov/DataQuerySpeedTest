@@ -1,6 +1,6 @@
 ﻿using Tester.Core.Extensions;
 
-namespace Tester.TestSuites;
+namespace Tester.Load.TestSuites;
 
 internal abstract class WebSocketSuiteBase<TModule>(IConfiguration configuration)
 	: TestSuiteBase(configuration)
