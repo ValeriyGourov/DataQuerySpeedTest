@@ -18,9 +18,27 @@ builder
 	.AddContainer("NBomberStudio", "nbomberdocker/nbomber-studio")
 	.WithHttpEndpoint(targetPort: 8080)
 	.WithEnvironment("DBSETTINGS:CONNECTIONSTRING", timescaleDB)
+	.WithImagePullPolicy(ImagePullPolicy.Always)
 	.WaitFor(timescaleDB);
 
-IResourceBuilder<ProjectResource> server = builder.AddProject<Projects.Server>(nameof(Projects.Server));
+IResourceBuilder<ProjectResource> server = builder
+	.AddProject<Projects.Server>(nameof(Projects.Server))
+	.WithUrls(static context =>
+	{
+		IEnumerable<(ResourceUrlAnnotation ResourceUrl, string Scheme, int Index)> urls = (
+			from resourceUrl in context.Urls
+			let uri = new Uri(resourceUrl.Url)
+			orderby uri.Scheme is "https"
+			select (ResourceUrl: resourceUrl, uri.Scheme)
+			)
+			.Select(static (item, index)
+				=> (item.ResourceUrl, item.Scheme, Index: index));
+		foreach ((ResourceUrlAnnotation resourceUrl, string scheme, int index) in urls)
+		{
+			resourceUrl.DisplayText = scheme.ToUpperInvariant();
+			resourceUrl.DisplayOrder = index;
+		}
+	});
 
 EndpointReference httpsServerEndpont = server.GetEndpoint("https");
 
