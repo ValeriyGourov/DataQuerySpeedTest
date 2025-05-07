@@ -17,6 +17,11 @@
 		<PackageReference Include="OpenTelemetry.Instrumentation.GrpcNetClient" Version="1.11.0-beta.1" />
 		<PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.*" />
 		<PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.*" />
+		<PackageReference Include="protobuf-net.Grpc" Version="1.*" />
+		<PackageReference Include="protobuf-net.BuildTools" Version="3.*">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 </Project>

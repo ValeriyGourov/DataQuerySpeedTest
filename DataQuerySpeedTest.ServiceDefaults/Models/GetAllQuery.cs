@@ -2,11 +2,13 @@
 
 using MessagePack;
 
+using ProtoBuf;
+
 namespace DataQuerySpeedTest.ServiceDefaults.Models;
 
-[MessagePackObject]
+[MessagePackObject, ProtoContract]
 public sealed class GetAllQuery : IQuery<IEnumerable<Order>>
 {
-	[property: Key(0)]
+	[property: Key(0), ProtoMember(1)]
 	public required ushort PageSize { get; init; }
 }
