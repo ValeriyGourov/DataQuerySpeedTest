@@ -1,4 +1,4 @@
-﻿#pragma warning disable VSTHRD200, CA1515
+﻿#pragma warning disable VSTHRD200, CA1515, CA1001
 
 using System.Diagnostics.CodeAnalysis;
 
@@ -21,6 +21,7 @@ namespace Tester.Benchmark;
 [CategoriesColumn]
 public class Benchmarks
 {
+	private Uri? _host;
 	private Uri? _webSocketHost;
 
 	private HttpClient? _httpClient;
@@ -33,6 +34,8 @@ public class Benchmarks
 	private WebSocketModuleBase? _getMessagePackWebSocketModule;
 	private WebSocketModuleBase? _getAllMessagePackWebSocketModule;
 	private WebSocketModuleBase? _createMessagePackWebSocketModule;
+
+	private GrpcModule? _grpcModule;
 
 	[GlobalSetup]
 	public void GlobalSetup()
@@ -62,6 +65,8 @@ public class Benchmarks
 		_getMessagePackWebSocketModule = CreateWebSocketModule<MessagePackWebSocketModule>(ScenarioNames.Get);
 		_getAllMessagePackWebSocketModule = CreateWebSocketModule<MessagePackWebSocketModule>(ScenarioNames.GetAll);
 		_createMessagePackWebSocketModule = CreateWebSocketModule<MessagePackWebSocketModule>(ScenarioNames.Create);
+
+		_grpcModule = new GrpcModule(_host, _httpClient);
 	}
 
 	[GlobalCleanup]
@@ -78,10 +83,13 @@ public class Benchmarks
 		_getAllMessagePackWebSocketModule?.DisposeAsync().GetAwaiter().GetResult();
 		_createMessagePackWebSocketModule?.DisposeAsync().GetAwaiter().GetResult();
 #pragma warning restore CA2012, VSTHRD002
+
+		_grpcModule?.Dispose();
 	}
 
 	[MemberNotNull(
 		nameof(_httpClient),
+		nameof(_host),
 		nameof(_webSocketHost))]
 	private void SetOptions()
 	{
@@ -97,9 +105,9 @@ public class Benchmarks
 			.GetRequiredService<IHttpClientFactory>()
 			.CreateClient();
 
-		_webSocketHost = app.Services
-			.GetRequiredService<IConfiguration>()
-			.GetWebSocketHost();
+		IConfiguration configuration = app.Services.GetRequiredService<IConfiguration>();
+		_host = configuration.GetHttpsServerEndpont();
+		_webSocketHost = configuration.GetWebSocketHost();
 	}
 
 	private static async Task ExecuteAsync(Func<CancellationToken, ValueTask<long?>> method)
@@ -114,6 +122,7 @@ public class Benchmarks
 #pragma warning restore RCS1256 // Invalid argument null check
 		return ExecuteAsync(module.ExecuteGetAsync);
 	}
+
 	[Benchmark(Description = RequestTypeNames.WebSocketJson, Baseline = true)]
 	[BenchmarkCategory(ScenarioNames.Get)]
 	public Task JsonWebSocketGet() => ExecuteGetAsync(_getJsonWebSocketModule);
@@ -125,6 +134,10 @@ public class Benchmarks
 	[Benchmark(Description = RequestTypeNames.Rest)]
 	[BenchmarkCategory(ScenarioNames.Get)]
 	public Task RestGet() => ExecuteGetAsync(_restModule);
+
+	[Benchmark(Description = RequestTypeNames.Grpc)]
+	[BenchmarkCategory(ScenarioNames.Get)]
+	public Task GrpcGet() => ExecuteGetAsync(_grpcModule);
 
 	#endregion
 
@@ -150,6 +163,10 @@ public class Benchmarks
 	[BenchmarkCategory(ScenarioNames.GetAll)]
 	public Task RestGetAll() => ExecuteGetAllAsync(_restModule);
 
+	[Benchmark(Description = RequestTypeNames.Grpc)]
+	[BenchmarkCategory(ScenarioNames.GetAll)]
+	public Task GrpcGetAll() => ExecuteGetAllAsync(_grpcModule);
+
 	#endregion
 
 	#region Create
@@ -173,6 +190,10 @@ public class Benchmarks
 	[Benchmark(Description = RequestTypeNames.Rest)]
 	[BenchmarkCategory(ScenarioNames.Create)]
 	public Task RestCreate() => ExecuteCreateAsync(_restModule);
+
+	[Benchmark(Description = RequestTypeNames.Grpc)]
+	[BenchmarkCategory(ScenarioNames.Create)]
+	public Task GrpcCreate() => ExecuteCreateAsync(_grpcModule);
 
 	#endregion
 }

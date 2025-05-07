@@ -2,24 +2,21 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.Mime;
-using System.Text;
 
 using DataQuerySpeedTest.ServiceDefaults.Models;
 
 using Microsoft.AspNetCore.Http;
 
-using Tester.Core;
-
 namespace Tester.Core.Modules;
 
-public class RestModule(HttpClient httpClient) : IModule
+public sealed class RestModule(HttpClient httpClient) : IModule
 {
 	private const string _resourceName = "rest";
 
 	private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
 	public ValueTask<long?> ExecuteGetAsync(CancellationToken cancellationToken)
-		=> ExecuteAsync(
+		=> ExecuteAsync<Order>(
 			static () =>
 			{
 				HttpRequestMessage request = new(
@@ -34,7 +31,7 @@ public class RestModule(HttpClient httpClient) : IModule
 			cancellationToken);
 
 	public ValueTask<long?> ExecuteGetAllAsync(CancellationToken cancellationToken)
-		=> ExecuteAsync(
+		=> ExecuteAsync<IEnumerable<Order>>(
 			static () =>
 			{
 				QueryString queryString = QueryString.Create(
@@ -62,31 +59,43 @@ public class RestModule(HttpClient httpClient) : IModule
 			},
 			cancellationToken);
 
+	private async Task<HttpResponseMessage> GetResponseMessageAsync(
+		Func<HttpRequestMessage> requestFactory,
+		CancellationToken cancellationToken)
+	{
+		using HttpRequestMessage requestMessage = requestFactory();
+
+		HttpResponseMessage responseMessage = await _httpClient
+			.SendAsync(requestMessage, cancellationToken)
+			.ConfigureAwait(false);
+		responseMessage.EnsureSuccessStatusCode();
+
+		return responseMessage;
+	}
+
 	private async ValueTask<long?> ExecuteAsync(
 		Func<HttpRequestMessage> requestFactory,
 		CancellationToken cancellationToken)
 	{
-		using HttpRequestMessage request = requestFactory();
-
-		long requestSize = 0L;
-		if (request.Content is not null)
-		{
-			Stream requestStream = await request.Content
-				.ReadAsStreamAsync(cancellationToken)
-				.ConfigureAwait(false);
-			requestSize = requestStream.Length;
-		}
-
-		HttpResponseMessage response = await _httpClient
-			.SendAsync(request, cancellationToken)
+		using HttpResponseMessage responseMessage = await GetResponseMessageAsync(requestFactory, cancellationToken)
 			.ConfigureAwait(false);
 
-		string json = await response.Content
-			.ReadAsStringAsync(cancellationToken)
+		return null;
+	}
+
+	private async ValueTask<long?> ExecuteAsync<T>(
+		Func<HttpRequestMessage> requestFactory,
+		CancellationToken cancellationToken)
+	{
+		using HttpResponseMessage responseMessage = await GetResponseMessageAsync(requestFactory, cancellationToken)
 			.ConfigureAwait(false);
 
-		long responseSize = Encoding.UTF8.GetByteCount(json);
+#pragma warning disable S1481
+		T? response = await responseMessage.Content
+			.ReadFromJsonAsync<T>(cancellationToken)
+			.ConfigureAwait(false);
+#pragma warning restore S1481
 
-		return requestSize + responseSize;
+		return null;
 	}
 }

@@ -6,7 +6,7 @@ namespace Tester.Core;
 
 public static class DataFactory
 {
-	public static ushort DefaultPageSize { get; } = 20;
+	public static ushort DefaultPageSize { get; } = 1000;
 
 	public static int GetDataId() => RandomNumberGenerator.GetInt32(int.MaxValue);
 
