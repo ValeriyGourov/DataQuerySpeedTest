@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿#pragma warning disable IDE0130
+
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -25,7 +27,8 @@ public static class ServiceExtensions
 
 		_ = builder.Services.ConfigureHttpClientDefaults(http =>
 		{
-			_ = http.UseSocketsHttpHandler();
+			_ = http.UseSocketsHttpHandler(static (handler, _)
+				=> handler.EnableMultipleHttp2Connections = true);
 
 			// Turn on resilience by default
 			_ = http.AddStandardResilienceHandler();
@@ -37,7 +40,8 @@ public static class ServiceExtensions
 		return builder;
 	}
 
-	public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+	public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder)
+		where TBuilder : IHostApplicationBuilder
 	{
 		_ = builder.Logging
 			.AddOpenTelemetry(static logging =>

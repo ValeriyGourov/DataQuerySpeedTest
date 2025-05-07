@@ -2,11 +2,13 @@
 
 using MessagePack;
 
+using ProtoBuf;
+
 namespace DataQuerySpeedTest.ServiceDefaults.Models;
 
-[MessagePackObject]
+[MessagePackObject, ProtoContract]
 public sealed class GetQuery : IQuery<Order>
 {
-	[property: Key(0)]
+	[property: Key(0), ProtoMember(1)]
 	public required int Id { get; init; }
 }

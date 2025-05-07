@@ -5,19 +5,19 @@ namespace Tester.Core.Extensions;
 
 public static class ConfigurationExtensions
 {
-	public static Uri? GetHttpsServerEndpont(this IConfiguration configuration)
+	public static Uri GetHttpsServerEndpont(this IConfiguration configuration)
 	{
 		ArgumentNullException.ThrowIfNull(configuration);
 
-		return configuration.GetValue<Uri>("HttpsServerEndpont");
+		return configuration.GetValue<Uri>("HttpsServerEndpont")
+			?? throw new InvalidOperationException("В конфигурации не указан адрес сервера.");
 	}
 
 	public static Uri GetWebSocketHost(this IConfiguration configuration)
 	{
 		ArgumentNullException.ThrowIfNull(configuration);
 
-		Uri httpsServerEndpont = configuration.GetHttpsServerEndpont()
-			?? throw new InvalidOperationException("В конфигурации не указан адрес сервера.");
+		Uri httpsServerEndpont = configuration.GetHttpsServerEndpont();
 
 		return new UriBuilder(httpsServerEndpont)
 		{
@@ -31,6 +31,6 @@ public static class ConfigurationExtensions
 
 		return services.ConfigureHttpClientDefaults(static httpClientBuilder
 			=> httpClientBuilder.ConfigureHttpClient(static client
-				=> client.BaseAddress = new("https+http://Server")));
+			=> client.BaseAddress = new("https+http://Server")));
 	}
 }
