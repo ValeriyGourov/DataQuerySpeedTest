@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Элементы решения/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path=".globalconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="SpellCheckerExclusion.dic" />
+  </Folder>
+  <Project Path="DataQuerySpeedTest.AppHost/DataQuerySpeedTest.AppHost.csproj" />
+  <Project Path="DataQuerySpeedTest.ServiceDefaults/DataQuerySpeedTest.ServiceDefaults.csproj" />
+  <Project Path="Protocols/Protocols.csproj" />
+  <Project Path="Server/Server.csproj" />
+  <Project Path="Tester.Benchmark/Tester.Benchmark.csproj" />
+  <Project Path="Tester.Core/Tester.Core.csproj" />
+  <Project Path="Tester.Load/Tester.Load.csproj" />
+</Solution>

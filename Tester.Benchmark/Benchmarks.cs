@@ -38,51 +38,53 @@ public class Benchmarks
 	private GrpcModule? _grpcModule;
 
 	[GlobalSetup]
-	public void GlobalSetup()
+	public async Task GlobalSetup()
 	{
 		SetOptions();
 
 		_restModule = new RestModule(_httpClient);
 
-		/* HACK: После обновления BenchmarkDotNet до версии 0.14.1 методы GlobalSetup и GlobalCleanup нужно сделать асинхронным.
-		 * https://github.com/dotnet/BenchmarkDotNet/issues/1738
-		 */
-#pragma warning disable CA2012, VSTHRD002
-		WebSocketModuleBase CreateWebSocketModule<T>(string endpointName)
+		ValueTask<WebSocketModuleBase> CreateWebSocketModule<T>(string endpointName)
 			where T : IWebSocketModule
 			=> T.CreateAsync(
-					_webSocketHost,
-					endpointName,
-					CancellationToken.None)
-				.GetAwaiter()
-				.GetResult();
-#pragma warning restore CA2012, VSTHRD002
+				_webSocketHost,
+				endpointName,
+				CancellationToken.None);
 
-		_getJsonWebSocketModule = CreateWebSocketModule<JsonWebSocketModule>(ScenarioNames.Get);
-		_getAllJsonWebSocketModule = CreateWebSocketModule<JsonWebSocketModule>(ScenarioNames.GetAll);
-		_createJsonWebSocketModule = CreateWebSocketModule<JsonWebSocketModule>(ScenarioNames.Create);
+		_getJsonWebSocketModule = await CreateWebSocketModule<JsonWebSocketModule>(ScenarioNames.Get)
+			.ConfigureAwait(false);
+		_getAllJsonWebSocketModule = await CreateWebSocketModule<JsonWebSocketModule>(ScenarioNames.GetAll)
+			.ConfigureAwait(false);
+		_createJsonWebSocketModule = await CreateWebSocketModule<JsonWebSocketModule>(ScenarioNames.Create)
+			.ConfigureAwait(false);
 
-		_getMessagePackWebSocketModule = CreateWebSocketModule<MessagePackWebSocketModule>(ScenarioNames.Get);
-		_getAllMessagePackWebSocketModule = CreateWebSocketModule<MessagePackWebSocketModule>(ScenarioNames.GetAll);
-		_createMessagePackWebSocketModule = CreateWebSocketModule<MessagePackWebSocketModule>(ScenarioNames.Create);
+		_getMessagePackWebSocketModule = await CreateWebSocketModule<MessagePackWebSocketModule>(ScenarioNames.Get)
+			.ConfigureAwait(false);
+		_getAllMessagePackWebSocketModule = await CreateWebSocketModule<MessagePackWebSocketModule>(ScenarioNames.GetAll)
+			.ConfigureAwait(false);
+		_createMessagePackWebSocketModule = await CreateWebSocketModule<MessagePackWebSocketModule>(ScenarioNames.Create)
+			.ConfigureAwait(false);
 
 		_grpcModule = new GrpcModule(_host, _httpClient);
 	}
 
 	[GlobalCleanup]
-	public void GlobalCleanup()
+	public async Task GlobalCleanup()
 	{
 		_httpClient?.Dispose();
 
-#pragma warning disable CA2012, VSTHRD002
-		_getJsonWebSocketModule?.DisposeAsync().GetAwaiter().GetResult();
-		_getAllJsonWebSocketModule?.DisposeAsync().GetAwaiter().GetResult();
-		_createJsonWebSocketModule?.DisposeAsync().GetAwaiter().GetResult();
+		static ValueTask DisposeAsync(WebSocketModuleBase? webSocketModule)
+			=> webSocketModule is not null
+				? webSocketModule.DisposeAsync()
+				: ValueTask.CompletedTask;
 
-		_getMessagePackWebSocketModule?.DisposeAsync().GetAwaiter().GetResult();
-		_getAllMessagePackWebSocketModule?.DisposeAsync().GetAwaiter().GetResult();
-		_createMessagePackWebSocketModule?.DisposeAsync().GetAwaiter().GetResult();
-#pragma warning restore CA2012, VSTHRD002
+		await DisposeAsync(_getJsonWebSocketModule).ConfigureAwait(false);
+		await DisposeAsync(_getAllJsonWebSocketModule).ConfigureAwait(false);
+		await DisposeAsync(_createJsonWebSocketModule).ConfigureAwait(false);
+
+		await DisposeAsync(_getMessagePackWebSocketModule).ConfigureAwait(false);
+		await DisposeAsync(_getAllMessagePackWebSocketModule).ConfigureAwait(false);
+		await DisposeAsync(_createMessagePackWebSocketModule).ConfigureAwait(false);
 
 		_grpcModule?.Dispose();
 	}
