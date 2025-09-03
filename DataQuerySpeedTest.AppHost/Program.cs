@@ -15,7 +15,7 @@ timescale.WithEnvironment(
 	timescaleDB.Resource.DatabaseName);
 
 builder
-	.AddContainer("NBomberStudio", "nbomberdocker/nbomber-studio")
+	.AddContainer("NBomberStudio", "nbomberdocker/nbomber-studio", "0.3.0")
 	.WithHttpEndpoint(targetPort: 8080)
 	.WithEnvironment("DBSETTINGS:CONNECTIONSTRING", timescaleDB)
 	.WithImagePullPolicy(ImagePullPolicy.Always)
