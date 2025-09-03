@@ -6,7 +6,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="NBomber" Version="6.*" />
-		<PackageReference Include="NBomber.Sinks.Timescale" Version="0.8.*" />
+		<PackageReference Include="NBomber.Sinks.Timescale" Version="0.9.*" />
 	</ItemGroup>
 
 	<ItemGroup>
