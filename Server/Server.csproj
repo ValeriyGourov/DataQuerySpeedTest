@@ -3,7 +3,7 @@
 	<ItemGroup>
 		<PackageReference Include="AutoFixture" Version="4.*" />
 		<PackageReference Include="Grpc.AspNetCore" Version="2.*" />
-		<PackageReference Include="Mediator.SourceGenerator" Version="2.*">
+		<PackageReference Include="Mediator.SourceGenerator" Version="3.*">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
