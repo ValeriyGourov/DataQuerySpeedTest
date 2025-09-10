@@ -55,12 +55,12 @@ internal static class WebSocketEndpoints
 		CancellationToken cancellationToken)
 		=> HandleCommand<CreateCommand>(context, mediator, cancellationToken);
 
-	private static Task HandleQuery<TQuery, TResponce>(
+	private static Task HandleQuery<TQuery, TResponse>(
 		HttpContext context,
 		IMediator mediator,
 		CancellationToken cancellationToken)
-		where TQuery : IQuery<TResponce>
-		=> HandleMessage<TQuery, TResponce>(
+		where TQuery : IQuery<TResponse>
+		=> HandleMessage<TQuery, TResponse>(
 			context,
 			(query, cancellationToken) => mediator.Send((TQuery)query, cancellationToken),
 			cancellationToken);
@@ -75,9 +75,9 @@ internal static class WebSocketEndpoints
 			(query, cancellationToken) => mediator.Send((TCommand)query, cancellationToken),
 			cancellationToken);
 
-	private static async Task HandleMessage<TMessage, TResponce>(
+	private static async Task HandleMessage<TMessage, TResponse>(
 		HttpContext context,
-		Func<IMessage, CancellationToken, ValueTask<TResponce>> responceHandler,
+		Func<IMessage, CancellationToken, ValueTask<TResponse>> responseHandler,
 		CancellationToken cancellationToken)
 		where TMessage : IMessage
 	{
@@ -100,7 +100,7 @@ internal static class WebSocketEndpoints
 			switch (webSocket.State)
 			{
 				case WebSocketState.Open:
-					await HandleData<TMessage, TResponce>(webSocket, subProtocol, responceHandler, cancellationToken)
+					await HandleData<TMessage, TResponse>(webSocket, subProtocol, responseHandler, cancellationToken)
 						.ConfigureAwait(false);
 					break;
 
@@ -119,10 +119,10 @@ internal static class WebSocketEndpoints
 		}
 	}
 
-	private static async Task HandleData<TMessage, TResponce>(
+	private static async Task HandleData<TMessage, TResponse>(
 		WebSocket webSocket,
 		IWebSocketSubProtocol subProtocol,
-		Func<IMessage, CancellationToken, ValueTask<TResponce>> responceHandler,
+		Func<IMessage, CancellationToken, ValueTask<TResponse>> responseHandler,
 		CancellationToken cancellationToken)
 		where TMessage : IMessage
 	{
@@ -149,7 +149,7 @@ internal static class WebSocketEndpoints
 			return;
 		}
 
-		TResponce result = await responceHandler(response.Data, cancellationToken)
+		TResponse result = await responseHandler(response.Data, cancellationToken)
 			.ConfigureAwait(false);
 
 		if (result is not Unit)
