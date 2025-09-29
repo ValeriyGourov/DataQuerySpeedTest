@@ -1,12 +1,17 @@
 ﻿IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
+const string
+	databaseIcon = "Database",
+	databaseWindowIcon = "DatabaseWindow";
+
 IResourceBuilder<PostgresServerResource> timescale = builder
 	.AddPostgres("Timescale")
+	.WithIconName(databaseIcon)
 	.WithImage("timescale/timescaledb")
 	.WithImageTag("latest-pg17")
 	.WithDataVolume("NBomber-Studio-data")
-	.WithPgAdmin()
-	.WithPgWeb();
+	.WithPgAdmin(ConfigureDbAdminConsole)
+	.WithPgWeb(ConfigureDbAdminConsole);
 
 IResourceBuilder<PostgresDatabaseResource> timescaleDB = timescale.AddDatabase("TimescaleDB");
 
@@ -58,3 +63,8 @@ builder
 	.WithExplicitStart();
 
 await builder.Build().RunAsync().ConfigureAwait(false);
+
+static void ConfigureDbAdminConsole(IResourceBuilder<ContainerResource> container) => container
+	.WithImageTag("latest")
+	.WithLifetime(ContainerLifetime.Persistent)
+	.WithIconName(databaseWindowIcon);

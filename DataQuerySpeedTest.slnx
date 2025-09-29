@@ -5,6 +5,7 @@
     <File Path=".gitignore" />
     <File Path=".globalconfig" />
     <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
     <File Path="SpellCheckerExclusion.dic" />
   </Folder>
   <Project Path="DataQuerySpeedTest.AppHost/DataQuerySpeedTest.AppHost.csproj" />
