@@ -18,9 +18,11 @@ internal abstract class TestSuiteBase(IConfiguration configuration)
 	protected Task RunGetScenarioAsync() => RunScenarioAsync(
 		ScenarioNames.Get,
 		static (module, cancellationToken) => module.ExecuteGetAsync(cancellationToken));
+
 	protected Task RunGetAllScenarioAsync() => RunScenarioAsync(
 		ScenarioNames.GetAll,
 		static (module, cancellationToken) => module.ExecuteGetAllAsync(cancellationToken));
+
 	protected Task RunCreateScenarioAsync() => RunScenarioAsync(
 		ScenarioNames.Create,
 		static (module, cancellationToken) => module.ExecuteCreateAsync(cancellationToken));
