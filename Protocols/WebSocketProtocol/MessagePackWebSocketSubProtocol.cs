@@ -13,8 +13,7 @@ public sealed class MessagePackWebSocketSubProtocol : IWebSocketSubProtocol
 		ArgumentNullException.ThrowIfNull(data);
 		ArgumentNullException.ThrowIfNull(webSocket);
 
-		byte[] bytes = await SerializeAsync(data, cancellationToken)
-			.ConfigureAwait(false);
+		byte[] bytes = Serialize(data, cancellationToken);
 
 		await webSocket
 			.SendAsync(
@@ -27,21 +26,21 @@ public sealed class MessagePackWebSocketSubProtocol : IWebSocketSubProtocol
 		return bytes.Length;
 	}
 
-	public ValueTask<byte[]> SerializeAsync<T>(
+	public byte[] Serialize<T>(
 		T request,
 		CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
-		return ValueTask.FromResult(MessagePackSerializer.Serialize(request, cancellationToken: cancellationToken));
+		return MessagePackSerializer.Serialize(request, cancellationToken: cancellationToken);
 	}
 
-	public ValueTask<T> DeserializeAsync<T>(
-		byte[] buffer,
+	public T Deserialize<T>(
+		Stream stream,
 		CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(buffer);
+		ArgumentNullException.ThrowIfNull(stream);
 
-		return ValueTask.FromResult(MessagePackSerializer.Deserialize<T>(buffer, cancellationToken: cancellationToken));
+		return MessagePackSerializer.Deserialize<T>(stream, cancellationToken: cancellationToken);
 	}
 }

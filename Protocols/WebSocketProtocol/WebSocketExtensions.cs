@@ -1,40 +1,48 @@
 ﻿using System.Buffers;
 using System.Net.WebSockets;
 
+using Microsoft.IO;
+
 namespace Protocols.WebSocketProtocol;
 
 public static class WebSocketExtensions
 {
 	private const int _bufferSize = 1024 * 4;
 
-	public static async ValueTask<byte[]> ReceiveAllAsync(
+	private static readonly RecyclableMemoryStreamManager _memoryStreamManager = new();
+
+	public static async ValueTask<Stream> ReceiveAllAsync(
 		this WebSocket webSocket,
 		CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(webSocket);
-
 		byte[] buffer = ArrayPool<byte>.Shared.Rent(_bufferSize);
 
-#pragma warning disable CA2007 // Попробуйте вызвать ConfigureAwait для ожидаемой задачи
-		await using MemoryStream memoryStream = new();
-#pragma warning restore CA2007 // Попробуйте вызвать ConfigureAwait для ожидаемой задачи
+		RecyclableMemoryStream stream = _memoryStreamManager.GetStream();
 		WebSocketReceiveResult result;
 
-		do
+		try
 		{
-			result = await webSocket
-				.ReceiveAsync(buffer, cancellationToken)
-				.ConfigureAwait(false);
+			do
+			{
+				result = await webSocket
+					.ReceiveAsync(buffer, cancellationToken)
+					.ConfigureAwait(false);
 
-			await memoryStream
-				.WriteAsync(
-					buffer.AsMemory(0, result.Count),
-					cancellationToken)
-				.ConfigureAwait(false);
-		} while (!result.EndOfMessage);
+				await stream
+					.WriteAsync(
+						buffer.AsMemory(0, result.Count),
+						cancellationToken)
+					.ConfigureAwait(false);
+			} while (!result.EndOfMessage);
+		}
+		finally
+		{
+			ArrayPool<byte>.Shared.Return(buffer);
+		}
 
-		ArrayPool<byte>.Shared.Return(buffer);
+		stream.Position = 0;
 
-		return memoryStream.ToArray();
+		return stream;
 	}
 }
