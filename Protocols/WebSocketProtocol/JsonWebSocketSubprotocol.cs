@@ -16,8 +16,7 @@ public sealed class JsonWebSocketSubprotocol : IWebSocketSubProtocol
 		ArgumentNullException.ThrowIfNull(data);
 		ArgumentNullException.ThrowIfNull(webSocket);
 
-		byte[] bytes = await SerializeAsync(data, cancellationToken)
-			.ConfigureAwait(false);
+		byte[] bytes = Serialize(data, cancellationToken);
 
 		await webSocket
 			.SendAsync(
@@ -30,40 +29,25 @@ public sealed class JsonWebSocketSubprotocol : IWebSocketSubProtocol
 		return bytes.Length;
 	}
 
-	public async ValueTask<byte[]> SerializeAsync<T>(
+	public byte[] Serialize<T>(
 		T request,
 		CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
-#pragma warning disable CA2007
-		await using MemoryStream memoryStream = new();
-#pragma warning restore CA2007
-		await JsonSerializer
-			.SerializeAsync(memoryStream, request, cancellationToken: cancellationToken)
-			.ConfigureAwait(false);
-
-		return memoryStream.ToArray();
+		return JsonSerializer.SerializeToUtf8Bytes(request);
 	}
 
-	public async ValueTask<T> DeserializeAsync<T>(
-		byte[] buffer,
+	public T Deserialize<T>(
+		Stream stream,
 		CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(buffer);
-
-#pragma warning disable CA2007
-		await using MemoryStream memoryStream = new(buffer);
-#pragma warning restore CA2007
-
-		// Для простоты просто выбросим исключение при любой ошибке десериализации.
+		ArgumentNullException.ThrowIfNull(stream);
 
 		T? message;
 		try
 		{
-			message = await JsonSerializer
-				.DeserializeAsync<T>(memoryStream, cancellationToken: cancellationToken)
-				.ConfigureAwait(false);
+			message = JsonSerializer.Deserialize<T>(stream);
 		}
 		catch (JsonException exception)
 		{

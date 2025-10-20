@@ -14,15 +14,16 @@ public interface IWebSocketSubProtocol
 
 	async Task<WebSocketResponse<T>> ReceiveAsync<T>(WebSocket webSocket, CancellationToken cancellationToken)
 	{
-		byte[] bytes = await webSocket
+#pragma warning disable CA2007
+		await using Stream stream = await webSocket
 			.ReceiveAllAsync(cancellationToken)
 			.ConfigureAwait(false);
+#pragma warning restore CA2007
 
 		if (webSocket.State == WebSocketState.Open)
 		{
-			T data = await DeserializeAsync<T>(bytes, cancellationToken)
-				.ConfigureAwait(false);
-			return new(data, bytes.Length);
+			T data = Deserialize<T>(stream, cancellationToken);
+			return new(data, stream.Length);
 		}
 		else
 		{
@@ -30,7 +31,7 @@ public interface IWebSocketSubProtocol
 		}
 	}
 
-	ValueTask<byte[]> SerializeAsync<T>(T request, CancellationToken cancellationToken = default);
+	byte[] Serialize<T>(T request, CancellationToken cancellationToken = default);
 
-	ValueTask<T> DeserializeAsync<T>(byte[] buffer, CancellationToken cancellationToken = default);
+	T Deserialize<T>(Stream stream, CancellationToken cancellationToken = default);
 }

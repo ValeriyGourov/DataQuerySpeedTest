@@ -2,6 +2,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="MessagePack" />
+		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
 	</ItemGroup>
 
 </Project>
