@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Net.Mime;
 
 using DataQuerySpeedTest.ServiceDefaults.Models;
+using DataQuerySpeedTest.ServiceDefaults.Serialization;
 
 using Microsoft.AspNetCore.Http;
 
@@ -55,7 +56,9 @@ public sealed class RestModule(HttpClient httpClient) : IModule
 				HttpMethod.Post,
 				new Uri(_resourceName, UriKind.Relative))
 			{
-				Content = JsonContent.Create(DataFactory.NewCreateCommand())
+				Content = JsonContent.Create(
+					DataFactory.NewCreateCommand(),
+					ModelsJsonSerializerContext.Default.CreateCommand)
 			},
 			cancellationToken);
 
@@ -91,6 +94,15 @@ public sealed class RestModule(HttpClient httpClient) : IModule
 			.ConfigureAwait(false);
 
 #pragma warning disable S1481
+		/*
+		 * TODO: В .NET 9 использование JsonSerializerContext для преобразования в классы, у которых
+		 * свойства объявлены с ключевым словом required, не оптимизировано и приводит к более медленному
+		 * выполнению преобразования и дополнительному выделению памяти. Поэтому временно используется
+		 * стандартный метод преобразования.
+		 * https://github.com/dotnet/runtime/issues/97612
+		 *
+		 * В идеале метод должен вызываться так: ReadFromJsonAsync<T>(ModelsJsonSerializerContext.Default.Options, cancellationToken)
+		 */
 		T? response = await responseMessage.Content
 			.ReadFromJsonAsync<T>(cancellationToken)
 			.ConfigureAwait(false);
