@@ -5,4 +5,8 @@
 		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\DataQuerySpeedTest.ServiceDefaults\DataQuerySpeedTest.ServiceDefaults.csproj" />
+	</ItemGroup>
+
 </Project>

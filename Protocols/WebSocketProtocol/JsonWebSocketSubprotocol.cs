@@ -2,6 +2,8 @@
 using System.Runtime.Serialization;
 using System.Text.Json;
 
+using DataQuerySpeedTest.ServiceDefaults.Serialization;
+
 namespace Protocols.WebSocketProtocol;
 
 public sealed class JsonWebSocketSubprotocol : IWebSocketSubProtocol
@@ -35,7 +37,7 @@ public sealed class JsonWebSocketSubprotocol : IWebSocketSubProtocol
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
-		return JsonSerializer.SerializeToUtf8Bytes(request);
+		return JsonSerializer.SerializeToUtf8Bytes(request, ModelsJsonSerializerContext.Default.Options);
 	}
 
 	public T Deserialize<T>(
@@ -47,6 +49,15 @@ public sealed class JsonWebSocketSubprotocol : IWebSocketSubProtocol
 		T? message;
 		try
 		{
+			/*
+			 * TODO: В .NET 9 использование JsonSerializerContext для преобразования в классы, у которых
+			 * свойства объявлены с ключевым словом required, не оптимизировано и приводит к более медленному
+			 * выполнению преобразования и дополнительному выделению памяти. Поэтому временно используется
+			 * стандартный метод преобразования.
+			 * https://github.com/dotnet/runtime/issues/97612
+			 *
+			 * В идеале метод должен вызываться так: JsonSerializer.Deserialize<T>(stream, ModelsJsonSerializerContext.Default.Options)
+			 */
 			message = JsonSerializer.Deserialize<T>(stream);
 		}
 		catch (JsonException exception)

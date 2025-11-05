@@ -1,4 +1,6 @@
-﻿using ProtoBuf.Grpc.Server;
+﻿using DataQuerySpeedTest.ServiceDefaults.Serialization;
+
+using ProtoBuf.Grpc.Server;
 
 using Server.QueryBuilders;
 
@@ -15,6 +17,12 @@ if (builder.Environment.IsDevelopment())
 {
 	builder.Services.AddCodeFirstGrpcReflection();
 }
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+	options.SerializerOptions.TypeInfoResolverChain.Insert(0, ModelsJsonSerializerContext.Default);
+	options.SerializerOptions.PropertyNamingPolicy = ModelsJsonSerializerContext.Default.Options.PropertyNamingPolicy;
+});
 
 WebApplication app = builder.Build();
 
