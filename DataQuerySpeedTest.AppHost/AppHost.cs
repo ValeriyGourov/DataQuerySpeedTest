@@ -20,10 +20,9 @@ timescale.WithEnvironment(
 	timescaleDB.Resource.DatabaseName);
 
 builder
-	.AddContainer("NBomberStudio", "nbomberdocker/nbomber-studio", "0.3.0")
+	.AddContainer("NBomberStudio", "nbomberdocker/nbomber-studio", "0.5.2")
 	.WithHttpEndpoint(targetPort: 8080)
-	.WithEnvironment("DBSETTINGS:CONNECTIONSTRING", timescaleDB)
-	.WithImagePullPolicy(ImagePullPolicy.Always)
+	.WithEnvironment("POSTGRESQL__CONNECTIONSTRING", timescaleDB)
 	.WaitFor(timescaleDB);
 
 IResourceBuilder<ProjectResource> server = builder
