@@ -5,32 +5,27 @@ namespace Tester.Core.Extensions;
 
 public static class ConfigurationExtensions
 {
-	public static Uri GetHttpsServerEndpont(this IConfiguration configuration)
+	extension(IConfiguration configuration)
 	{
-		ArgumentNullException.ThrowIfNull(configuration);
+		public Uri GetHttpsServerEndpont()
+			=> configuration.GetValue<Uri>("HttpsServerEndpont")
+				?? throw new InvalidOperationException("В конфигурации не указан адрес сервера.");
 
-		return configuration.GetValue<Uri>("HttpsServerEndpont")
-			?? throw new InvalidOperationException("В конфигурации не указан адрес сервера.");
-	}
-
-	public static Uri GetWebSocketHost(this IConfiguration configuration)
-	{
-		ArgumentNullException.ThrowIfNull(configuration);
-
-		Uri httpsServerEndpont = configuration.GetHttpsServerEndpont();
-
-		return new UriBuilder(httpsServerEndpont)
+		public Uri GetWebSocketHost()
 		{
-			Scheme = "wss"
-		}.Uri;
+			Uri httpsServerEndpont = configuration.GetHttpsServerEndpont();
+
+			return new UriBuilder(httpsServerEndpont)
+			{
+				Scheme = "wss"
+			}.Uri;
+		}
 	}
 
-	public static IServiceCollection ConfigureHttpClient(this IServiceCollection services)
+	extension(IServiceCollection services)
 	{
-		ArgumentNullException.ThrowIfNull(services);
-
-		return services.ConfigureHttpClientDefaults(static httpClientBuilder
-			=> httpClientBuilder.ConfigureHttpClient(static client
-			=> client.BaseAddress = new("https+http://Server")));
+		public IServiceCollection ConfigureHttpClient()
+			=> services.ConfigureHttpClientDefaults(static httpClientBuilder
+				=> httpClientBuilder.ConfigureHttpClient(static client => client.BaseAddress = new("https+http://Server")));
 	}
 }

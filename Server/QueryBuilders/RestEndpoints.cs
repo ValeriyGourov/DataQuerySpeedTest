@@ -10,23 +10,26 @@ namespace Server.QueryBuilders;
 
 internal static class RestEndpoints
 {
-	public static IEndpointRouteBuilder MapRestEndpoints(this IEndpointRouteBuilder routes)
+	extension(IEndpointRouteBuilder routes)
 	{
-		RouteGroupBuilder group = routes.MapGroup("rest");
+		public IEndpointRouteBuilder MapRestEndpoints()
+		{
+			RouteGroupBuilder group = routes.MapGroup("rest");
 
-		_ = group
-			.MapGet("/{id}", Get)
-			.WithName(nameof(Get));
+			_ = group
+				.MapGet("/{id}", Get)
+				.WithName(nameof(Get));
 
-		_ = group
-			.MapGet("/", GetAll)
-			.WithName(nameof(GetAll));
+			_ = group
+				.MapGet("/", GetAll)
+				.WithName(nameof(GetAll));
 
-		_ = group
-			.MapPost("/", Create)
-			.WithName(nameof(Create));
+			_ = group
+				.MapPost("/", Create)
+				.WithName(nameof(Create));
 
-		return routes;
+			return routes;
+		}
 	}
 
 	private static async ValueTask<Ok<Order>> Get(

@@ -20,15 +20,18 @@ internal static class WebSocketEndpoints
 		new MessagePackWebSocketSubProtocol()
 	];
 
-	public static IEndpointRouteBuilder MapWebSocketEndpoints(this IEndpointRouteBuilder routes)
+	extension(IEndpointRouteBuilder routes)
 	{
-		RouteGroupBuilder group = routes.MapGroup("WebSocket");
+		public IEndpointRouteBuilder MapWebSocketEndpoints()
+		{
+			RouteGroupBuilder group = routes.MapGroup("WebSocket");
 
-		MapEndpoint(group, Get);
-		MapEndpoint(group, GetAll);
-		MapEndpoint(group, Create);
+			MapEndpoint(group, Get);
+			MapEndpoint(group, GetAll);
+			MapEndpoint(group, Create);
 
-		return routes;
+			return routes;
+		}
 	}
 
 	private static void MapEndpoint(
