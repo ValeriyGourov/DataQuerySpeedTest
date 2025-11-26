@@ -1,36 +1,34 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿#pragma warning disable CA1034 // TODO: Удалить после исправления ошибки анализатора: https://github.com/dotnet/roslyn-analyzers/issues/7765
+#pragma warning disable CA1708 // TODO: Удалить после исправления ошибки анализатора: https://github.com/dotnet/roslyn-analyzers/issues/7771
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Tester.Core.Extensions;
 
 public static class ConfigurationExtensions
 {
-	public static Uri GetHttpsServerEndpont(this IConfiguration configuration)
+	extension(IConfiguration configuration)
 	{
-		ArgumentNullException.ThrowIfNull(configuration);
+		public Uri GetHttpsServerEndpont()
+			=> configuration.GetValue<Uri>("HttpsServerEndpont")
+				?? throw new InvalidOperationException("В конфигурации не указан адрес сервера.");
 
-		return configuration.GetValue<Uri>("HttpsServerEndpont")
-			?? throw new InvalidOperationException("В конфигурации не указан адрес сервера.");
-	}
-
-	public static Uri GetWebSocketHost(this IConfiguration configuration)
-	{
-		ArgumentNullException.ThrowIfNull(configuration);
-
-		Uri httpsServerEndpont = configuration.GetHttpsServerEndpont();
-
-		return new UriBuilder(httpsServerEndpont)
+		public Uri GetWebSocketHost()
 		{
-			Scheme = "wss"
-		}.Uri;
+			Uri httpsServerEndpont = configuration.GetHttpsServerEndpont();
+
+			return new UriBuilder(httpsServerEndpont)
+			{
+				Scheme = "wss"
+			}.Uri;
+		}
 	}
 
-	public static IServiceCollection ConfigureHttpClient(this IServiceCollection services)
+	extension(IServiceCollection services)
 	{
-		ArgumentNullException.ThrowIfNull(services);
-
-		return services.ConfigureHttpClientDefaults(static httpClientBuilder
-			=> httpClientBuilder.ConfigureHttpClient(static client
-			=> client.BaseAddress = new("https+http://Server")));
+		public IServiceCollection ConfigureHttpClient()
+			=> services.ConfigureHttpClientDefaults(static httpClientBuilder
+				=> httpClientBuilder.ConfigureHttpClient(static client => client.BaseAddress = new("https+http://Server")));
 	}
 }
