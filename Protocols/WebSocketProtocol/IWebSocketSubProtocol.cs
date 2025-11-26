@@ -14,6 +14,8 @@ public interface IWebSocketSubProtocol
 
 	async Task<WebSocketResponse<T>> ReceiveAsync<T>(WebSocket webSocket, CancellationToken cancellationToken)
 	{
+		ArgumentNullException.ThrowIfNull(webSocket);
+
 #pragma warning disable CA2007
 		await using Stream stream = await webSocket
 			.ReceiveAllAsync(cancellationToken)

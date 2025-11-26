@@ -1,4 +1,6 @@
-﻿using System.Buffers;
+﻿#pragma warning disable CA1034 // TODO: Удалить после исправления ошибки анализатора: https://github.com/dotnet/roslyn-analyzers/issues/7765
+
+using System.Buffers;
 using System.Net.WebSockets;
 
 using Microsoft.IO;

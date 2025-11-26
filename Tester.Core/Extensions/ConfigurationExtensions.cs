@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿#pragma warning disable CA1034 // TODO: Удалить после исправления ошибки анализатора: https://github.com/dotnet/roslyn-analyzers/issues/7765
+#pragma warning disable CA1708 // TODO: Удалить после исправления ошибки анализатора: https://github.com/dotnet/roslyn-analyzers/issues/7771
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Tester.Core.Extensions;
