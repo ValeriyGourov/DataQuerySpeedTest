@@ -1,46 +1,18 @@
-﻿using System.Net.WebSockets;
-
-using MessagePack;
+﻿using Protocols.WebSocketProtocol.DataProtocols;
+using Protocols.WebSocketProtocol.DataSerializers;
 
 namespace Protocols.WebSocketProtocol;
 
-public sealed class MessagePackWebSocketSubProtocol : IWebSocketSubProtocol
+public sealed class MessagePackWebSocketSubProtocol : WebSocketSubProtocolBase
 {
-	public string SubProtocol { get; } = "message-pack";
+	private static readonly MessagePackWebSocketDataSerializer _serializer = new();
 
-	public async Task<long> SendAsync<T>(T data, WebSocket webSocket, CancellationToken cancellationToken)
-	{
-		ArgumentNullException.ThrowIfNull(data);
-		ArgumentNullException.ThrowIfNull(webSocket);
+	internal MessagePackWebSocketSubProtocol(WebSocketDataProtocol dataProtocol)
+		: base(dataProtocol)
+	{ }
 
-		byte[] bytes = Serialize(data, cancellationToken);
+	public override string SubProtocol { get; } = "message-pack";
 
-		await webSocket
-			.SendAsync(
-				bytes,
-				WebSocketMessageType.Binary,
-				true,
-				cancellationToken)
-			.ConfigureAwait(false);
-
-		return bytes.Length;
-	}
-
-	public byte[] Serialize<T>(
-		T request,
-		CancellationToken cancellationToken = default)
-	{
-		ArgumentNullException.ThrowIfNull(request);
-
-		return MessagePackSerializer.Serialize(request, cancellationToken: cancellationToken);
-	}
-
-	public T Deserialize<T>(
-		Stream stream,
-		CancellationToken cancellationToken = default)
-	{
-		ArgumentNullException.ThrowIfNull(stream);
-
-		return MessagePackSerializer.Deserialize<T>(stream, cancellationToken: cancellationToken);
-	}
+	public static IWebSocketSubProtocol WithClassicDataProtocol { get; } = new MessagePackWebSocketSubProtocol(new ClassicWebSocketDataProtocol(_serializer));
+	public static IWebSocketSubProtocol WithModernDataProtocol { get; } = new MessagePackWebSocketSubProtocol(new ModernWebSocketDataProtocol(_serializer));
 }
