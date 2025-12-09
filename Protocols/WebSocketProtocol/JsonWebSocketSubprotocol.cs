@@ -1,78 +1,18 @@
-﻿using System.Net.WebSockets;
-using System.Runtime.Serialization;
-using System.Text.Json;
-
-using DataQuerySpeedTest.ServiceDefaults.Serialization;
+﻿using Protocols.WebSocketProtocol.DataProtocols;
+using Protocols.WebSocketProtocol.DataSerializers;
 
 namespace Protocols.WebSocketProtocol;
 
-public sealed class JsonWebSocketSubprotocol : IWebSocketSubProtocol
+public sealed class JsonWebSocketSubProtocol : WebSocketSubProtocolBase
 {
-	public string SubProtocol { get; } = "json";
+	private static readonly JsonWebSocketDataSerializer _serializer = new();
 
-	public async Task<long> SendAsync<T>(
-		T data,
-		WebSocket webSocket,
-		CancellationToken cancellationToken)
-	{
-		ArgumentNullException.ThrowIfNull(data);
-		ArgumentNullException.ThrowIfNull(webSocket);
+	internal JsonWebSocketSubProtocol(WebSocketDataProtocol dataProtocol)
+		: base(dataProtocol)
+	{ }
 
-		byte[] bytes = Serialize(data, cancellationToken);
+	public override string SubProtocol { get; } = "json";
 
-		await webSocket
-			.SendAsync(
-				bytes,
-				WebSocketMessageType.Text,
-				true,
-				cancellationToken)
-			.ConfigureAwait(false);
-
-		return bytes.Length;
-	}
-
-	public byte[] Serialize<T>(
-		T request,
-		CancellationToken cancellationToken = default)
-	{
-		ArgumentNullException.ThrowIfNull(request);
-
-		return JsonSerializer.SerializeToUtf8Bytes(request, ModelsJsonSerializerContext.Default.Options);
-	}
-
-	public T Deserialize<T>(
-		Stream stream,
-		CancellationToken cancellationToken = default)
-	{
-		ArgumentNullException.ThrowIfNull(stream);
-
-		T? message;
-		try
-		{
-			/*
-			 * TODO: В .NET 9 использование JsonSerializerContext для преобразования в классы, у которых
-			 * свойства объявлены с ключевым словом required, не оптимизировано и приводит к более медленному
-			 * выполнению преобразования и дополнительному выделению памяти. Поэтому временно используется
-			 * стандартный метод преобразования.
-			 * https://github.com/dotnet/runtime/issues/97612
-			 *
-			 * В идеале метод должен вызываться так: JsonSerializer.Deserialize<T>(stream, ModelsJsonSerializerContext.Default.Options)
-			 */
-			message = JsonSerializer.Deserialize<T>(stream);
-		}
-		catch (JsonException exception)
-		{
-			throw new SerializationException(
-				"Не удалось прочитать полученные данные как JSON.",
-				exception);
-		}
-
-		if (message is null
-			|| EqualityComparer<T>.Default.Equals(message, default))
-		{
-			throw new SerializationException("В сообщении не обнаружены полезные данные.");
-		}
-
-		return message;
-	}
+	public static IWebSocketSubProtocol WithClassicDataProtocol { get; } = new JsonWebSocketSubProtocol(new ClassicWebSocketDataProtocol(_serializer));
+	public static IWebSocketSubProtocol WithModernDataProtocol { get; } = new JsonWebSocketSubProtocol(new ModernWebSocketDataProtocol(_serializer));
 }

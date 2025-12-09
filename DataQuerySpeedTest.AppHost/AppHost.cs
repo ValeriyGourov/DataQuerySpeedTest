@@ -1,17 +1,14 @@
 ﻿IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
-const string
-	databaseIcon = "Database",
-	databaseWindowIcon = "DatabaseWindow";
-
 IResourceBuilder<PostgresServerResource> timescale = builder
 	.AddPostgres("Timescale")
-	.WithIconName(databaseIcon)
+	.WithIconName("Database")
 	.WithImage("timescale/timescaledb")
 	.WithImageTag("latest-pg17")
-	.WithDataVolume("NBomber-Studio-data")
-	.WithPgAdmin(ConfigureDbAdminConsole)
-	.WithPgWeb(ConfigureDbAdminConsole);
+	.WithDataVolume("NBomber-Studio-data");
+timescale
+	.WithPgAdmin(container => container.WithDbAdminConsoleSettings(timescale))
+	.WithPgWeb(container => container.WithDbAdminConsoleSettings(timescale));
 
 IResourceBuilder<PostgresDatabaseResource> timescaleDB = timescale.AddDatabase("TimescaleDB");
 
@@ -23,7 +20,8 @@ builder
 	.AddContainer("NBomberStudio", "nbomberdocker/nbomber-studio", "0.5.2")
 	.WithHttpEndpoint(targetPort: 8080)
 	.WithEnvironment("POSTGRESQL__CONNECTIONSTRING", timescaleDB)
-	.WaitFor(timescaleDB);
+	.WaitFor(timescaleDB)
+	.WithParentRelationship(timescale);
 
 IResourceBuilder<ProjectResource> server = builder
 	.AddProject<Projects.Server>(nameof(Projects.Server))
@@ -46,7 +44,7 @@ IResourceBuilder<ProjectResource> server = builder
 
 EndpointReference httpsServerEndpont = server.GetEndpoint("https");
 
-builder
+IResourceBuilder<ProjectResource> testerLoad = builder
 	.AddProject<Projects.Tester_Load>("Tester-Load")
 	.WaitFor(server)
 	.WithReference(server)
@@ -61,9 +59,23 @@ builder
 	.WithEnvironment("HttpsServerEndpont", httpsServerEndpont)
 	.WithExplicitStart();
 
+timescale.WithParentRelationship(testerLoad);
+
 await builder.Build().RunAsync().ConfigureAwait(false);
 
-static void ConfigureDbAdminConsole(IResourceBuilder<ContainerResource> container) => container
-	.WithImageTag("latest")
-	.WithLifetime(ContainerLifetime.Persistent)
-	.WithIconName(databaseWindowIcon);
+#pragma warning disable S3903, RCS1110
+static file class DbResourceExtensions
+{
+	extension<T>(IResourceBuilder<T> container)
+		where T : ContainerResource
+	{
+		public IResourceBuilder<T> WithDbAdminConsoleSettings(
+			IResourceBuilder<IResource> parent)
+			=> container
+				.WithImageTag("latest")
+				.WithLifetime(ContainerLifetime.Persistent)
+				.WithIconName("DatabaseWindow")
+				.WithParentRelationship(parent);
+	}
+}
+#pragma warning restore S3903, RCS1110

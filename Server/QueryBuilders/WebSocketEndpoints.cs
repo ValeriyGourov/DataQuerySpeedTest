@@ -16,8 +16,10 @@ internal static class WebSocketEndpoints
 {
 	private static readonly IWebSocketSubProtocol[] _supportedSubProtocols =
 	[
-		new JsonWebSocketSubprotocol(),
-		new MessagePackWebSocketSubProtocol()
+		JsonWebSocketSubProtocol.WithClassicDataProtocol,
+		MessagePackWebSocketSubProtocol.WithClassicDataProtocol,
+		JsonWebSocketSubProtocol.WithModernDataProtocol,
+		MessagePackWebSocketSubProtocol.WithModernDataProtocol
 	];
 
 	extension(IEndpointRouteBuilder routes)
@@ -92,7 +94,9 @@ internal static class WebSocketEndpoints
 			return;
 		}
 
-		IWebSocketSubProtocol subProtocol = NegotiateSubProtocol(context.WebSockets.WebSocketRequestedProtocols);
+		IWebSocketSubProtocol subProtocol = NegotiateSubProtocol(
+			context.WebSockets.WebSocketRequestedProtocols,
+			context.Request.Headers);
 
 		using WebSocket webSocket = await context.WebSockets
 			.AcceptWebSocketAsync(subProtocol.SubProtocol)
@@ -109,7 +113,7 @@ internal static class WebSocketEndpoints
 
 				case WebSocketState.CloseReceived:
 					await webSocket
-						.CloseAsync(
+						.CloseOutputAsync(
 							WebSocketCloseStatus.NormalClosure,
 							null,
 							cancellationToken)
@@ -129,19 +133,16 @@ internal static class WebSocketEndpoints
 		CancellationToken cancellationToken)
 		where TMessage : IMessage
 	{
-		WebSocketResponse<TMessage> response;
+		TMessage response;
 		try
 		{
 			response = await subProtocol
 				.ReceiveAsync<TMessage>(webSocket, cancellationToken)
 				.ConfigureAwait(false);
 		}
-		catch (SerializationException exception)
+		catch (SerializationException)
 		{
-			await HandleInvalidPayloadDataAsync(
-				webSocket,
-				exception.Message,
-				cancellationToken)
+			await HandleInvalidPayloadDataAsync(webSocket, "Не удалось прочитать полученные данные.", cancellationToken)
 				.ConfigureAwait(false);
 
 			return;
@@ -152,7 +153,7 @@ internal static class WebSocketEndpoints
 			return;
 		}
 
-		TResponse result = await responseHandler(response.Data, cancellationToken)
+		TResponse result = await responseHandler(response, cancellationToken)
 			.ConfigureAwait(false);
 
 		if (result is not Unit)
@@ -167,12 +168,14 @@ internal static class WebSocketEndpoints
 		WebSocket webSocket,
 		string description,
 		CancellationToken cancellationToken)
-		=> webSocket.CloseAsync(
-			WebSocketCloseStatus.InvalidPayloadData,
-			description,
-			cancellationToken);
+		=> webSocket.State <= WebSocketState.Open
+			? webSocket.CloseOutputAsync(WebSocketCloseStatus.InvalidPayloadData, description, cancellationToken)
+			: Task.CompletedTask;
 
-	private static IWebSocketSubProtocol NegotiateSubProtocol(IEnumerable<string> requestedSubProtocols)
+	private static IWebSocketSubProtocol NegotiateSubProtocol(
+		IEnumerable<string> requestedSubProtocols,
+		IHeaderDictionary headers)
 		=> _supportedSubProtocols.First(subProtocol
-			=> requestedSubProtocols.Contains(subProtocol.SubProtocol));
+			=> requestedSubProtocols.Contains(subProtocol.SubProtocol)
+			&& subProtocol.DataProtocol == headers[HeaderNames.DataProtocol]);
 }

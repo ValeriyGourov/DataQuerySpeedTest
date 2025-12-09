@@ -24,6 +24,8 @@ public sealed class GrpcModule : IModule, IDisposable
 		_client = _channel.CreateGrpcService<IOrderService>();
 	}
 
+	public override string ToString() => "gRPC";
+
 	public async ValueTask<long?> ExecuteGetAsync(CancellationToken cancellationToken)
 	{
 		_ = await _client

@@ -16,6 +16,8 @@ public sealed class RestModule(HttpClient httpClient) : IModule
 
 	private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
+	public override string ToString() => "REST";
+
 	public ValueTask<long?> ExecuteGetAsync(CancellationToken cancellationToken)
 		=> ExecuteAsync<Order>(
 			static () =>
